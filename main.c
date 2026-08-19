@@ -27,22 +27,47 @@ int main() {
     getmaxyx(stdscr, max_y, max_x);
 
     while (play_again) {
-        switch (select_difficulty(max_x, max_y)) {
-            case 0:
-                width = 9;
-                height = 9;
-                mine_n = 10;
-                break;
-            case 1:
-                width = 16;
-                height = 16;
-                mine_n = 40;
-                break;
-            case 2:
-                width = 30;
-                height = 16;
-                mine_n = 99;
-                break;
+        {
+            int result[3];
+            switch (select_difficulty(max_x, max_y)) {
+                case 0:
+                    width = 9;
+                    height = 9;
+                    mine_n = 10;
+                    break;
+                case 1:
+                    width = 16;
+                    height = 16;
+                    mine_n = 40;
+                    break;
+                case 2:
+                    width = 30;
+                    height = 16;
+                    mine_n = 99;
+                    break;
+                case 3:
+                    select_custom(result, max_x, max_y);
+                    // Check width
+                    if (result[0] <= 3)
+                        result[0] = 4;
+                    if (result[0] >= (max_x - 1) / 2)
+                        result[0] = (max_x - 1) / 2 - 1;
+                    // Check height
+                    if (result[1] <= 3)
+                        result[1] = 4;
+                    if (result[1] >= max_y - 3)
+                        result[1] = max_y - 4;
+                    // Check mines
+                    if (!result[2])
+                        result[2] = 1;
+                    if (result[2] >= result[0] * result[1] - 9)
+                        result[2] = result[0] * result[1] - 10;
+                    // Assign
+                    width = result[0];
+                    height = result[1];
+                    mine_n = result[2];
+                    break;
+            }
         }
 
         int board_height = height + 3;
@@ -60,6 +85,8 @@ int main() {
         Square *grid = NULL;
         time_t start;
         time(&start);
+        clear();
+        refresh();
         draw_grid(board, NULL, board_width, board_height, false);
         draw_stats(board, mine_n, 0, start);
         wrefresh(board);

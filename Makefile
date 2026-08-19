@@ -1,14 +1,16 @@
 CC = cc
 OBJECTS = draw.o grid.o main.o ui.o
 HEADERS = draw.h grid.h ui.h
-TARGET = minesweeper
-FLAGS = $(shell pkg-config --cflags --libs ncurses)
+TARGET = minesweeper-tui
+CFLAGS = $(shell pkg-config --cflags ncurses)
+LDLIBS = $(shell pkg-config --libs ncurses)
 
 .PHONY: clean run
 $(TARGET): $(OBJECTS)
-	$(CC) $(OBJECTS) -o $(TARGET) $(FLAGS)
+	$(CC) $(OBJECTS) -o $(TARGET) $(LDLIBS)
 clean:
-	@rm -f $(TARGET) $(OBJECTS)
+	@rm -f $(TARGET) $(OBJECTS) 
 run: $(TARGET)
 	./$(TARGET)
-$(OBJECTS): $(HEADERS)
+%.o: %.c $(HEADERS)
+	$(CC) $(CFLAGS) -c $<

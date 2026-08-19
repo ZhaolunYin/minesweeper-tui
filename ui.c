@@ -2,17 +2,29 @@
 #include <string.h>
 #include <ncurses.h>
 
-#define DIFFICULTY_LINES 4
-#define DIFFICULTY_OPS 3
+#define DIFFICULTY_LINES 5
+#define DIFFICULTY_OPS 4
+
 #define PLAY_AGAIN_LINES 4
 #define PLAY_AGAIN_OPS 2
+
+#define CUSTOM_LINES 3
+#define CUSTOM_MAX_DIGITS 3
+
+int _pow(int a, int b) {
+    int result = 1;
+    for (int i = 0; i < b; i++)
+        result *= a;
+    return result;
+}
 
 int select_difficulty(int term_width, int term_height) {
     const char *lines[DIFFICULTY_LINES] = {
         "Select difficulty",
-        "1. Beginner",
-        "2. Intermediate",
-        "3. Expert",
+        "Beginner",
+        "Intermediate",
+        "Expert",
+        "Custom",
     };
     int width = 0;
     for (int i = 0; i < DIFFICULTY_LINES; i++) {
@@ -67,7 +79,6 @@ int select_difficulty(int term_width, int term_height) {
     refresh();
     return opt;
 }
-
 
 bool select_play_again(int term_width, int term_height, bool win) {
     char *ops[PLAY_AGAIN_OPS] = {
@@ -132,4 +143,51 @@ bool select_play_again(int term_width, int term_height, bool win) {
     curs_set(cv);
     refresh();
     return (bool) !opt;
+}
+
+void select_custom(int *result, int term_width, int term_height) {
+    const char *lines[CUSTOM_LINES] = {
+        "Width: ",
+        "Height:",
+        "Mines: ",
+    };
+    int values[CUSTOM_LINES] = { 30, 30, 160 };
+    int width = 0;
+    for (int i = 0; i < CUSTOM_LINES; i++) {
+        if (strlen(lines[i]) > width)
+            width = strlen(lines[i]) + CUSTOM_MAX_DIGITS;
+    }
+    width += 2;
+    WINDOW *window = newwin(CUSTOM_LINES + 2, width, (term_height - (CUSTOM_LINES + 2)) / 2, (term_width - width) / 2);
+    keypad(window, true);
+    int cv = curs_set(0);
+    int opt = 0;
+    for (int i = 0; i < CUSTOM_LINES; i++) {
+        int ch = 0;
+        box(window, 0, 0);
+        while (ch != KEY_ENTER && ch != '\n' && ch != '\r') {
+            for (int j = 0; j < CUSTOM_LINES; j++) {
+                if (j == opt)
+                    wattron(window, A_REVERSE);
+                mvwprintw(window, j + 1, 1, "%s%03d", lines[j], values[j]);
+                wattroff(window, A_REVERSE);
+            }
+            wrefresh(window);
+            ch = wgetch(window);
+            if (ch >= '0' && ch <= '9') {
+                if (values[i] / _pow(10, CUSTOM_MAX_DIGITS - 1) > 0)
+                    continue;
+                values[i] *= 10;
+                values[i] += ch - '0';
+            }
+            else if (ch == KEY_BACKSPACE) {
+                values[i] /= 10;
+            }
+        }
+        result[i] = values[i];
+        opt++;
+    }
+    delwin(window);
+    curs_set(cv);
+    refresh();
 }
