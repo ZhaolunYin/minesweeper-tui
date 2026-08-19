@@ -34,7 +34,7 @@ make run
 | Key   | Action |
 |-------|--------|
 | Enter | Covered square: Uncover square |
-|       | Uncovered square: Chord (Uncover all unflagged cells around it when the correct amount of flags are around it.) |
+| Enter | Uncovered square: Chord (Uncover all unflagged cells around it when the correct amount of flags are around it.) |
 | Arrow / Vim keys | Move cursor |
 | F | Flag square |
 
@@ -43,7 +43,7 @@ make run
 | Button | Action |
 |--------|--------|
 | Left   | Covered square: Uncover square |
-|        | Uncovered square: Chord (Uncover all unflagged cells around it when the correct amount of flags are around it.) |
-| Right | Flag square |
+| Left   | Uncovered square: Chord (Uncover all unflagged cells around it when the correct amount of flags are around it.) |
+| Right  | Flag square |
 
 
