@@ -38,10 +38,12 @@ int select_difficulty(int term_width, int term_height) {
         MEVENT event;
         switch (ch) {
             case KEY_UP:
+            case 'k':
                 if (opt > 0)
                     opt--;
                 break;
             case KEY_DOWN:
+            case 'j':
                 if (opt < DIFFICULTY_OPS - 1)
                     opt++;
                 break;
@@ -102,10 +104,12 @@ bool select_play_again(int term_width, int term_height, bool win) {
         MEVENT event;
         switch (ch) {
             case KEY_UP:
+            case 'k':
                 if (opt > 0)
                     opt--;
                 break;
             case KEY_DOWN:
+            case 'j':
                 if (opt < PLAY_AGAIN_OPS - 1)
                     opt++;
                 break;
