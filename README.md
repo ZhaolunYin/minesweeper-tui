@@ -1,7 +1,7 @@
 # Minesweeper TUI
 A TUI Minesweeper game written in C.
 
-![Minesweeper game](assets/game.png)
+<img src="./assets/game.png" alt="Minesweeper game" height="300" width="auto">
 
 Installation
 ```bash
