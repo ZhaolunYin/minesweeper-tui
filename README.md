@@ -34,7 +34,7 @@ make run
 | Key   | Action |
 |-------|--------|
 | Enter | Covered square: Uncover square |
-| Enter | Uncovered square: Chord (Uncover all unflagged cells around it when the correct amount of flags are around it.) |
+| Enter | Uncovered square: Chord |
 | Arrow / Vim keys | Move cursor |
 | F | Flag square |
 
@@ -43,9 +43,12 @@ make run
 | Button | Action |
 |--------|--------|
 | Left   | Covered square: Uncover square |
-| Left   | Uncovered square: Chord (Uncover all unflagged cells around it when the correct amount of flags are around it.) |
+| Left   | Uncovered square: Chord |
 | Right  | Flag square |
 
+## Chording
+> Chording is a feature in minesweeper where all unflagged cells around a number can be opened when the correct amount of flags are around it.
+> \- [*Minesweeper Wiki*](https://minesweeper.fandom.com/wiki/Chording)
 
 ## Difficulties
 
