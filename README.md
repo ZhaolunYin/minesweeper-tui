@@ -1,11 +1,11 @@
 # Minesweeper TUI
 A TUI Minesweeper game written in C.
 
-<img src="./assets/gameplay.gif" alt="Gameplay" height="300" width="auto">
+<img src="./assets/gameplay.gif" alt="Gameplay" height="500" width="auto">
 
 ## Installation
 ### Dependencies
-The following depemdencies must be installed **before** compilation:
+The following dependencies must be installed **before** compilation:
 - **make**
 - **ncurses**
 
