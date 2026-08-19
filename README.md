@@ -47,3 +47,16 @@ make run
 | Right  | Flag square |
 
 
+## Difficulties
+
+| Difficulty | Grid | Mines |
+|------------|------|-------|
+| Beginner | 9x9 | 10 |
+| Intermediate | 16x16 | 40 |
+| Expert | 30x16 | 99 |
+| Custom | 4x4 - screen size | > 0 |
+
+## Features
+- Ascii text interface with mouse support
+- Custom board size
+- Chording
