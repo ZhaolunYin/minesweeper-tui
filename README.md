@@ -1,7 +1,7 @@
 # Minesweeper TUI
 A TUI Minesweeper game written in C.
 
-<img src="./assets/gameplay-cropped.gif" alt="Gameplay" height="300" width="auto">
+<img src="./assets/gameplay.gif" alt="Gameplay" height="300" width="auto">
 
 ## Installation
 ### Dependencies
