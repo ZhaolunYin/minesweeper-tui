@@ -7,7 +7,7 @@ A TUI Minesweeper game written in C.
 ### Nix
 If you have nix installed, you can do:
 ```bash
-nix run github:zhaolunyin/minesweeper-tui
+nix run github:ZhaolunYin/minesweeper-tui
 ```
 
 ### Dependencies
