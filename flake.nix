@@ -29,7 +29,7 @@
                 __structuredAttrs = true;
 
                 installPhase = ''
-                    install -Dm755 minesweeper-tui $out/bin/minesweeper-tui
+                    install -Dm755 ./build/minesweeper-tui $out/bin/minesweeper-tui
                 '';
             };
         });

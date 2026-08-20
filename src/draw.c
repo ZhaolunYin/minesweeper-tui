@@ -2,6 +2,16 @@
 
 const char symbols[9] = { '.', '1', '2', '3', '4', '5', '6', '7', '8' };
 
+/// Initialises color pairs
+void init_color_pairs() {
+    start_color();
+    use_default_colors();
+
+    init_pair(1, COLOR_RED, -1);
+    init_pair(2, COLOR_GREEN, -1);
+    init_pair(3, COLOR_BLUE, -1);
+}
+
 /// Draws grid on board with specified dimensions.
 void draw_grid(WINDOW *board, Square *grid, int board_width, int board_height, bool show_all) {
     box(board, 0, 0);
