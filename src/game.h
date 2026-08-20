@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 typedef struct {
+    int difficulty;
     int width;
     int height;
     int mines;
@@ -11,14 +12,20 @@ typedef struct {
     bool win;
     Square *grid;
 
+    int score;
+    int highscore;
+
     int cursor_x;
     int cursor_y;
 
     int max_x;
     int max_y;
-    
+ 
     WINDOW *board;
 } Game;
+
+#define FOLDER_NAME "minesweeper-tui"
+#define SCORE_FILE "score"
 
 Game init_game();
 void game_loop(Game *game);

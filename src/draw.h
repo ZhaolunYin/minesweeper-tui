@@ -7,6 +7,6 @@
 #include "grid.h"
 
 void init_color_pairs();
-void draw_grid(WINDOW *board, Square *grid, int board_width, int board_height, bool show_all);
+void draw_grid(WINDOW *board, Square *grid, int board_width, int board_height, int difficulty, bool show_all);
 bool move_cursor(WINDOW *win, Square *grid, int width, int height, int *cursor_x, int *cursor_y, int *flag_n);
-void draw_stats(WINDOW *board, int mine_total, int flags, time_t before);
+void draw_stats(WINDOW *board, int mine_total, int flags, int time);

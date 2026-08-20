@@ -1,15 +1,7 @@
 #include "ui.h"
+#include <stdio.h>
 #include <string.h>
 #include <ncurses.h>
-
-#define DIFFICULTY_LINES 5
-#define DIFFICULTY_OPS 4
-
-#define PLAY_AGAIN_LINES 4
-#define PLAY_AGAIN_OPS 2
-
-#define CUSTOM_LINES 3
-#define CUSTOM_MAX_DIGITS 3
 
 int _pow(int a, int b) {
     int result = 1;
@@ -19,17 +11,10 @@ int _pow(int a, int b) {
 }
 
 int select_difficulty(int term_width, int term_height) {
-    const char *lines[DIFFICULTY_LINES] = {
-        "Select difficulty",
-        "Beginner",
-        "Intermediate",
-        "Expert",
-        "Custom",
-    };
     int width = 0;
     for (int i = 0; i < DIFFICULTY_LINES; i++) {
-        if ((int) strlen(lines[i]) > width)
-            width = strlen(lines[i]);
+        if ((int) strlen(DIFFICULTIES[i]) > width)
+            width = strlen(DIFFICULTIES[i]);
     }
     width += 2;
     WINDOW *window = newwin(DIFFICULTY_LINES + 2, width, (term_height - (DIFFICULTY_LINES + 2)) / 2, (term_width - width) / 2);
@@ -42,7 +27,7 @@ int select_difficulty(int term_width, int term_height) {
         for (int i = 0; i < DIFFICULTY_LINES; i++) {
             if (i == opt + DIFFICULTY_LINES - DIFFICULTY_OPS)
                 wattron(window, A_REVERSE);
-            mvwprintw(window, i + 1, 1, "%s", lines[i]);
+            mvwprintw(window, i + 1, 1, "%s", DIFFICULTIES[i]);
             wattroff(window, A_REVERSE);
         }
         wrefresh(window);
@@ -80,17 +65,26 @@ int select_difficulty(int term_width, int term_height) {
     return opt;
 }
 
-bool select_play_again(int term_width, bool win) {
+bool select_play_again(int term_width, bool win, int score, int highscore) {
     char *ops[PLAY_AGAIN_OPS] = {
         "You lose!",
         "You win!",
     };
+    char score_text[BUFSIZ];
+    char highscore_text[BUFSIZ];
     char *lines[PLAY_AGAIN_LINES] = {
         ops[(int) win],
+        score_text,
+        highscore_text,
         "Play again?",
         "Yes",
         "No",
     };
+    snprintf(score_text, sizeof(score_text), "Score: %d", win ? score : 0);
+    if (highscore)
+        snprintf(highscore_text, sizeof(highscore_text), "Highscore: %d", highscore);
+    else
+        snprintf(highscore_text, sizeof(highscore_text), "Highscore: None");
     int width = 0;
     for (int i = 0; i < PLAY_AGAIN_LINES; i++) {
         if ((int) strlen(lines[i]) > width)

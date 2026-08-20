@@ -1,5 +1,8 @@
 #include "draw.h"
 #include "grid.h"
+#include "ui.h"
+
+#include <string.h>
 
 #define SYMBOLS (const char[9]) { '.', '1', '2', '3', '4', '5', '6', '7', '8' }
 
@@ -16,8 +19,14 @@ void init_color_pairs() {
 }
 
 /// Draws grid on board with specified dimensions.
-void draw_grid(WINDOW *board, Square *grid, int board_width, int board_height, bool show_all) {
+void draw_grid(WINDOW *board, Square *grid, int board_width, int board_height, int difficulty, bool show_all) {
     box(board, 0, 0);
+    const char *difficulty_text = DIFFICULTIES[DIFFICULTY_LINES - DIFFICULTY_OPS + difficulty];
+    if (strlen("Minesweeper-") + strlen(difficulty_text) < (size_t) board_width)
+        mvwprintw(board, 0, 0, "Minesweeper-%s", difficulty_text);
+    else if (strlen(difficulty_text) < (size_t) board_width)
+        mvwprintw(board, 0, (board_width - strlen(difficulty_text)) / 2, "%s", difficulty_text);
+
     if (!grid) {
         for (int y = 2; y < board_height - 1; y++) {
             for (int x = 1; x < board_width - 1; x += 2) {
@@ -147,10 +156,8 @@ bool move_cursor(WINDOW *win, Square *grid, int width, int height, int *cursor_x
     return false;
 }
 
-void draw_stats(WINDOW *board, int mine_total, int flags, time_t before) {
+void draw_stats(WINDOW *board, int mine_total, int flags, int time) {
     int maxx = getmaxx(board);
     mvwprintw(board, 1, 1, "%03d", mine_total - flags);
-    time_t now;
-    time(&now);
-    mvwprintw(board, 1, maxx - DIGITS - 1, "%03ld", now - before);
+    mvwprintw(board, 1, maxx - DIGITS - 1, "%03d", time);
 }

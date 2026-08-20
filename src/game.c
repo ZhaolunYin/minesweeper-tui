@@ -3,17 +3,80 @@
 #include "board.h"
 #include "grid.h"
 #include "ui.h"
+#include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 
 #define SAFE_ZONE 1
 #define MIN_MINES 1
+
+#define SCORING_DIFFICULTIES 3
+
+void _fix_highscore_file(const char *file) {
+    FILE *fptr = fopen(file, "w");
+    for (int i = 0; i < SCORING_DIFFICULTIES; i++) {
+        fprintf(fptr, "0\n");
+    }
+    fclose(fptr);
+}
+
+int _load_highscore(int difficulty) {
+    if (difficulty < 0)
+        difficulty = 0;
+    if (difficulty > SCORING_DIFFICULTIES - 1)
+        difficulty = SCORING_DIFFICULTIES - 1;
+    char dir[BUFSIZ];
+    char file[BUFSIZ];
+    snprintf(dir, BUFSIZ, "%s/%s", getenv("XDG_DATA_HOME"), FOLDER_NAME);
+    mkdir(dir, 0755);
+    snprintf(file, BUFSIZ, "%s/%s", dir, SCORE_FILE);
+    FILE *fptr = fopen(file, "r");
+    if (!fptr) {
+        _fix_highscore_file(file);
+        return 0;
+    }
+    int result[SCORING_DIFFICULTIES];
+    for (int i = 0; i < SCORING_DIFFICULTIES; i++) {
+        if (fscanf(fptr, "%d", &result[i]) != 1) {
+            fclose(fptr);
+            _fix_highscore_file(file);
+            return 0;
+        }
+    }
+    fclose(fptr);
+    return result[difficulty];
+}
+
+void _write_highscore(int score, int difficulty) {
+    int scores[3];
+    for (int i = 0; i < SCORING_DIFFICULTIES; i++) {
+        scores[i] = _load_highscore(i);
+    }
+    scores[difficulty] = score;
+    if (difficulty < 0)
+        difficulty = 0;
+    if (difficulty > SCORING_DIFFICULTIES - 1)
+        difficulty = SCORING_DIFFICULTIES - 1;
+    char dir[BUFSIZ];
+    char file[BUFSIZ];
+    snprintf(dir, BUFSIZ, "%s/%s", getenv("XDG_DATA_HOME"), FOLDER_NAME);
+    mkdir(dir, 0755);
+    snprintf(file, BUFSIZ, "%s/%s", dir, SCORE_FILE);
+
+    FILE *fptr = fopen(file, "w");
+    for (int i = 0; i < SCORING_DIFFICULTIES; i++) {
+        fprintf(fptr, "%d\n", scores[i]);
+    }
+    fclose(fptr);
+}
 
 Game init_game() {
     Game game;
     getmaxyx(stdscr, game.max_y, game.max_x);
 
     int result[3];
-    switch (select_difficulty(game.max_x, game.max_y)) {
+    game.difficulty = select_difficulty(game.max_x, game.max_y);
+    switch (game.difficulty) {
         case 0:
             game.width = 9;
             game.height = 9;
@@ -66,6 +129,8 @@ Game init_game() {
     game.flags = 0;
     game.win = false;
     game.grid = NULL;
+    game.score = 0;
+    game.highscore = _load_highscore(game.difficulty);
 
     game.board = newwin(board_height, board_width, (game.max_y - board_height) / 2, (game.max_x - board_width) / 2);
     keypad(game.board, true);
@@ -79,8 +144,8 @@ void game_loop(Game *game) {
     time(&start);
     clear();
     refresh();
-    draw_grid(game->board, NULL, width_to_board_width(game->width), height_to_board_height(game->height), false);
-    draw_stats(game->board, game->mines, 0, start);
+    draw_grid(game->board, NULL, width_to_board_width(game->width), height_to_board_height(game->height), game->difficulty, false);
+    draw_stats(game->board, game->mines, 0, 0);
     wrefresh(game->board);
 
     do {
@@ -89,8 +154,6 @@ void game_loop(Game *game) {
     } while (!game->grid);
 
 
-    time(&start);
-
     int selected = 0;
     while (selected != -1) {
         if (all_selected(game->grid, game->width, game->height)) {
@@ -98,20 +161,28 @@ void game_loop(Game *game) {
             break;
         }
         do {
-            draw_grid(game->board, game->grid, width_to_board_width(game->width), height_to_board_height(game->height), false);
-            draw_stats(game->board, game->mines, game->flags, start);
+            draw_grid(game->board, game->grid, width_to_board_width(game->width), height_to_board_height(game->height), game->difficulty, false);
+
+            draw_stats(game->board, game->mines, game->flags, game->score);
             wrefresh(game->board);
             if (move_cursor(game->board, game->grid, game->width, game->height, &game->cursor_x, &game->cursor_y, &game->flags)) {
                 selected = select_square(&game->grid, game->width, game->height, game->cursor_x, game->cursor_y);
             }
+            time_t now;
+            time(&now);
+            game->score = now - start;
         } while (!selected);
     }
 }
 
 bool end_game(Game *game) {
-    draw_grid(game->board, game->grid, width_to_board_width(game->width), height_to_board_height(game->height), true);
+    draw_grid(game->board, game->grid, width_to_board_width(game->width), height_to_board_height(game->height), game->difficulty, true);
     wrefresh(game->board);
-    bool play_again = select_play_again(game->max_x, game->win);
+    if ((!game->highscore || game->score < game->highscore) && game->win) {
+        game->highscore = game->score;
+        _write_highscore(game->highscore, game->difficulty);
+    }
+    bool play_again = select_play_again(game->max_x, game->win, game->score, game->highscore);
     delwin(game->board);
     free(game->grid);
     clear();
