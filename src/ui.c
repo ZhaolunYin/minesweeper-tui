@@ -28,7 +28,7 @@ int select_difficulty(int term_width, int term_height) {
     };
     int width = 0;
     for (int i = 0; i < DIFFICULTY_LINES; i++) {
-        if (strlen(lines[i]) > width)
+        if ((int) strlen(lines[i]) > width)
             width = strlen(lines[i]);
     }
     width += 2;
@@ -80,7 +80,7 @@ int select_difficulty(int term_width, int term_height) {
     return opt;
 }
 
-bool select_play_again(int term_width, int term_height, bool win) {
+bool select_play_again(int term_width, bool win) {
     char *ops[PLAY_AGAIN_OPS] = {
         "You lose!",
         "You win!",
@@ -93,7 +93,7 @@ bool select_play_again(int term_width, int term_height, bool win) {
     };
     int width = 0;
     for (int i = 0; i < PLAY_AGAIN_LINES; i++) {
-        if (strlen(lines[i]) > width)
+        if ((int) strlen(lines[i]) > width)
             width = strlen(lines[i]);
     }
     width += 2;
@@ -154,7 +154,7 @@ void select_custom(int *result, int term_width, int term_height) {
     int values[CUSTOM_LINES] = { 30, 30, 160 };
     int width = 0;
     for (int i = 0; i < CUSTOM_LINES; i++) {
-        if (strlen(lines[i]) > width)
+        if ((int) strlen(lines[i]) > width)
             width = strlen(lines[i]) + CUSTOM_MAX_DIGITS;
     }
     width += 2;

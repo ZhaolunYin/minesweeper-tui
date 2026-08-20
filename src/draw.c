@@ -1,4 +1,5 @@
 #include "draw.h"
+#include "grid.h"
 
 const char symbols[9] = { '.', '1', '2', '3', '4', '5', '6', '7', '8' };
 
@@ -93,7 +94,7 @@ bool move_cursor(WINDOW *win, Square *grid, int width, int height, int *cursor_x
             break;
         case 'f':
             if (grid && flag_n) {
-                Square *square = &grid[(*cursor_y) * width + (*cursor_x)];
+                Square *square = get_square(grid, width, height, *cursor_x, *cursor_y);
                 if (!square->uncovered) {
                     square->flag = !square->flag;
                     if (square->flag)
@@ -123,7 +124,7 @@ bool move_cursor(WINDOW *win, Square *grid, int width, int height, int *cursor_x
                     return true;
                 else if (event.bstate & BUTTON3_PRESSED) {
                     if (grid && flag_n) {
-                        Square *square = &grid[(*cursor_y) * width + (*cursor_x)];
+                        Square *square = get_square(grid, width, height, *cursor_x, *cursor_y);
                         if (!square->uncovered) {
                             square->flag = !square->flag;
                             if (square->flag)

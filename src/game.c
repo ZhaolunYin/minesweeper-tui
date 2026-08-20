@@ -1,8 +1,12 @@
 #include "game.h"
 #include "draw.h"
 #include "board.h"
+#include "grid.h"
 #include "ui.h"
 #include <stdlib.h>
+
+#define SAFE_ZONE 1
+#define MIN_MINES 1
 
 Game init_game() {
     Game game;
@@ -27,21 +31,27 @@ Game init_game() {
             break;
         case 3:
             select_custom(result, game.max_x, game.max_y);
-            // Check width
-            if (result[0] <= 3)
-                result[0] = 4;
-            if (result[0] >= (game.max_x - 1) / 2)
-                result[0] = (game.max_x - 1) / 2 - 1;
-            // Check height
-            if (result[1] <= 3)
-                result[1] = 4;
-            if (result[1] >= game.max_y - 3)
-                result[1] = game.max_y - 4;
-            // Check mines
-            if (!result[2])
-                result[2] = 1;
-            if (result[2] >= result[0] * result[1] - 9)
-                result[2] = result[0] * result[1] - 10;
+            // If win on one click - 
+            // Safezone * 2 + 1 is minimum width / height first click uncovers
+            if (result[0] < SAFE_ZONE * 2 + 2)
+                result[0] = SAFE_ZONE * 2 + 2;
+            if (result[1] < SAFE_ZONE * 2 + 2)
+                result[1] = SAFE_ZONE * 2 + 2;
+
+            // If bigger than screen
+            if (result[0] > board_width_to_width(game.max_x) - 1)
+                result[0] = board_width_to_width(game.max_x) - 1;
+            if (result[1] > board_height_to_height(game.max_y) - 1)
+                result[1] = board_height_to_height(game.max_y) - 1;
+
+            // If too little mines
+            if (result[2] < MIN_MINES)
+                result[2] = MIN_MINES;
+
+            // If no of mines causes 1st click win or impossible 1st click
+            if (result[2] > result[0] * result[1] - (SAFE_ZONE * 2 + 1) * (SAFE_ZONE * 2 + 1) + 1)
+                result[2] = result[0] * result[1] - (SAFE_ZONE * 2 + 1) * (SAFE_ZONE * 2 + 1) + 1;
+
             // Assign
             game.width = result[0];
             game.height = result[1];
@@ -59,7 +69,7 @@ Game init_game() {
 
     game.board = newwin(board_height, board_width, (game.max_y - board_height) / 2, (game.max_x - board_width) / 2);
     keypad(game.board, true);
-    wtimeout(game.board, 100);
+    wtimeout(game.board, 250);
 
     return game;
 }
@@ -75,33 +85,33 @@ void game_loop(Game *game) {
 
     do {
         if (move_cursor(game->board, NULL, game->width, game->height, &game->cursor_x, &game->cursor_y, NULL))
-            game->grid = create_grid(game->width, game->height, game->mines, game->cursor_x, game->cursor_y);
+            game->grid = create_grid(game->width, game->height, game->mines, game->cursor_x, game->cursor_y, SAFE_ZONE);
     } while (!game->grid);
 
 
-    int selected = 0;
     time(&start);
 
-    do {
-        wclear(game->board);
+    int selected = 0;
+    while (selected != -1) {
+        if (all_selected(game->grid, game->width, game->height)) {
+            game->win = true;
+            break;
+        }
         do {
             draw_grid(game->board, game->grid, width_to_board_width(game->width), height_to_board_height(game->height), false);
             draw_stats(game->board, game->mines, game->flags, start);
             wrefresh(game->board);
-            if (move_cursor(game->board, game->grid, game->width, game->height, &game->cursor_x, &game->cursor_y, &game->flags))
+            if (move_cursor(game->board, game->grid, game->width, game->height, &game->cursor_x, &game->cursor_y, &game->flags)) {
                 selected = select_square(&game->grid, game->width, game->height, game->cursor_x, game->cursor_y);
+            }
         } while (!selected);
-        if (all_selected(game->grid, game->width, game->height)) {
-            game->win = true;
-        }
-    } while (selected != -1 && !game->win);
+    }
 }
 
 bool end_game(Game *game) {
     draw_grid(game->board, game->grid, width_to_board_width(game->width), height_to_board_height(game->height), true);
     wrefresh(game->board);
-    bool play_again = select_play_again(game->max_x, game->max_y, game->win);
-    int ch;
+    bool play_again = select_play_again(game->max_x, game->win);
     delwin(game->board);
     free(game->grid);
     clear();
