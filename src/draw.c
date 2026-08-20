@@ -1,7 +1,9 @@
 #include "draw.h"
 #include "grid.h"
 
-const char symbols[9] = { '.', '1', '2', '3', '4', '5', '6', '7', '8' };
+#define SYMBOLS (const char[9]) { '.', '1', '2', '3', '4', '5', '6', '7', '8' }
+
+#define DIGITS 3
 
 /// Initialises color pairs
 void init_color_pairs() {
@@ -37,14 +39,14 @@ void draw_grid(WINDOW *board, Square *grid, int board_width, int board_height, b
                     }
                     else {
                         wattron(board, COLOR_PAIR(2));
-                        mvwaddch(board, y, x, symbols[grid[i].surrounding]);
+                        mvwaddch(board, y, x, SYMBOLS[grid[i].surrounding]);
                         wattroff(board, COLOR_PAIR(2));
                     }
                 }
                 else {
                     if (grid[i].uncovered) {
                         wattron(board, COLOR_PAIR(2));
-                        mvwaddch(board, y, x, symbols[grid[i].surrounding]);
+                        mvwaddch(board, y, x, SYMBOLS[grid[i].surrounding]);
                         wattroff(board, COLOR_PAIR(2));
                     }
                     else {
@@ -140,13 +142,12 @@ bool move_cursor(WINDOW *win, Square *grid, int width, int height, int *cursor_x
         default:
             break;
     }
-    wmove(win, (*cursor_y) + 1, (*cursor_x) * 2 + 1);
+    wmove(win, (*cursor_y) + 2, (*cursor_x) * 2 + 1);
     wrefresh(win);
     return false;
 }
 
 void draw_stats(WINDOW *board, int mine_total, int flags, time_t before) {
-    const int DIGITS = 3;
     int maxx = getmaxx(board);
     mvwprintw(board, 1, 1, "%03d", mine_total - flags);
     time_t now;
