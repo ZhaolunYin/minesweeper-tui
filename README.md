@@ -1,7 +1,7 @@
 # Minesweeper TUI
 
 [![GitHub release](https://img.shields.io/github/v/release/ZhaolunYin/minesweeper-tui)](https://github.com/ZhaolunYin/minesweeper-tui/releases)
-[![GitHub license](https://img.shields.io/github/license/ZhaolunYin/minesweeper-tui)](https://github.com/ZhaolunYin/minesweeper-tui)
+[![GitHub license](https://img.shields.io/github/license/ZhaolunYin/minesweeper-tui)](https://github.com/ZhaolunYin/minesweeper-tui/LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/ZhaolunYin/minesweeper-tui)](https://github.com/ZhaolunYin/minesweeper-tui)
 
 A TUI Minesweeper game written in C.
