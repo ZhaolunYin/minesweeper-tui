@@ -12,8 +12,8 @@ typedef struct {
     bool win;
     Square *grid;
 
-    int score;
-    int highscore;
+    long long score;
+    long long highscore;
 
     int cursor_x;
     int cursor_y;

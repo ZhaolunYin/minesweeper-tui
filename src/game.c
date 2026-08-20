@@ -20,7 +20,7 @@ void _fix_highscore_file(const char *file) {
     fclose(fptr);
 }
 
-int _load_highscore(int difficulty) {
+long _load_highscore(int difficulty) {
     if (difficulty < 0)
         difficulty = 0;
     if (difficulty > SCORING_DIFFICULTIES - 1)
@@ -35,9 +35,9 @@ int _load_highscore(int difficulty) {
         _fix_highscore_file(file);
         return 0;
     }
-    int result[SCORING_DIFFICULTIES];
+    long long result[SCORING_DIFFICULTIES];
     for (int i = 0; i < SCORING_DIFFICULTIES; i++) {
-        if (fscanf(fptr, "%d", &result[i]) != 1) {
+        if (fscanf(fptr, "%lld", &result[i]) != 1) {
             fclose(fptr);
             _fix_highscore_file(file);
             return 0;
@@ -47,8 +47,8 @@ int _load_highscore(int difficulty) {
     return result[difficulty];
 }
 
-void _write_highscore(int score, int difficulty) {
-    int scores[3];
+void _write_highscore(long score, int difficulty) {
+    long long scores[3];
     for (int i = 0; i < SCORING_DIFFICULTIES; i++) {
         scores[i] = _load_highscore(i);
     }
@@ -65,7 +65,7 @@ void _write_highscore(int score, int difficulty) {
 
     FILE *fptr = fopen(file, "w");
     for (int i = 0; i < SCORING_DIFFICULTIES; i++) {
-        fprintf(fptr, "%d\n", scores[i]);
+        fprintf(fptr, "%lld\n", scores[i]);
     }
     fclose(fptr);
 }
@@ -140,8 +140,6 @@ Game init_game() {
 }
 
 void game_loop(Game *game) {
-    time_t start;
-    time(&start);
     clear();
     refresh();
     draw_grid(game->board, NULL, width_to_board_width(game->width), height_to_board_height(game->height), game->difficulty, false);
@@ -153,6 +151,8 @@ void game_loop(Game *game) {
             game->grid = create_grid(game->width, game->height, game->mines, game->cursor_x, game->cursor_y, SAFE_ZONE);
     } while (!game->grid);
 
+    struct timespec start;
+    clock_gettime(CLOCK_MONOTONIC, &start);
 
     int selected = 0;
     while (selected != -1) {
@@ -162,15 +162,14 @@ void game_loop(Game *game) {
         }
         do {
             draw_grid(game->board, game->grid, width_to_board_width(game->width), height_to_board_height(game->height), game->difficulty, false);
-
-            draw_stats(game->board, game->mines, game->flags, game->score);
+            draw_stats(game->board, game->mines, game->flags, game->score / 1000);
             wrefresh(game->board);
             if (move_cursor(game->board, game->grid, game->width, game->height, &game->cursor_x, &game->cursor_y, &game->flags)) {
                 selected = select_square(&game->grid, game->width, game->height, game->cursor_x, game->cursor_y);
             }
-            time_t now;
-            time(&now);
-            game->score = now - start;
+            struct timespec now;
+            clock_gettime(CLOCK_MONOTONIC, &now);
+            game->score = (now.tv_sec - start.tv_sec) * 1000 + (now.tv_nsec - start.tv_nsec) / (1000 * 1000);
         } while (!selected);
     }
 }

@@ -65,7 +65,7 @@ int select_difficulty(int term_width, int term_height) {
     return opt;
 }
 
-bool select_play_again(int term_width, bool win, int score, int highscore) {
+bool select_play_again(int term_width, bool win, long long score, long long highscore) {
     char *ops[PLAY_AGAIN_OPS] = {
         "You lose!",
         "You win!",
@@ -80,9 +80,12 @@ bool select_play_again(int term_width, bool win, int score, int highscore) {
         "Yes",
         "No",
     };
-    snprintf(score_text, sizeof(score_text), "Score: %d", win ? score : 0);
+    if (win)
+        snprintf(score_text, sizeof(score_text), "Score: %lld.%3.llds", score / 1000, score % 1000);
+    else
+        snprintf(score_text, sizeof(score_text), "Score: None");
     if (highscore)
-        snprintf(highscore_text, sizeof(highscore_text), "Highscore: %d", highscore);
+        snprintf(highscore_text, sizeof(highscore_text), "Highscore: %lld.%3.llds", highscore / 1000, highscore % 1000);
     else
         snprintf(highscore_text, sizeof(highscore_text), "Highscore: None");
     int width = 0;

@@ -18,5 +18,5 @@
 #define CUSTOM_MAX_DIGITS 3
 
 int select_difficulty(int term_width, int term_height);
-bool select_play_again(int term_width, bool win, int score, int highscore);
+bool select_play_again(int term_width, bool win, long long score, long long highscore);
 void select_custom(int *result, int term_width, int term_height);
