@@ -17,9 +17,14 @@ void _fix_highscore_file() {
     char file[BUFSIZ];
     char *data_dir = getenv("XDG_DATA_HOME");
     if (!data_dir) {
-        data_dir = "~/.local/share";
+        char *home = getenv("HOME");
+        if (!home)
+            return;
+        snprintf(dir, BUFSIZ, "%s/.local/share/%s", home, FOLDER_NAME);
     }
-    snprintf(dir, BUFSIZ, "%s/%s", data_dir, FOLDER_NAME);
+    else {
+        snprintf(dir, BUFSIZ, "%s/%s", data_dir, FOLDER_NAME);
+    }
     mkdir(dir, 0755);
     snprintf(file, BUFSIZ, "%s/%s/%s", data_dir, FOLDER_NAME, SCORE_FILE);
 
@@ -39,9 +44,14 @@ long _load_highscore(int difficulty) {
     char file[BUFSIZ];
     char *data_dir = getenv("XDG_DATA_HOME");
     if (!data_dir) {
-        data_dir = "~/.local/share";
+        char *home = getenv("HOME");
+        if (!home)
+            return 0;
+        snprintf(dir, BUFSIZ, "%s/.local/share/%s", home, FOLDER_NAME);
     }
-    snprintf(dir, BUFSIZ, "%s/%s", data_dir, FOLDER_NAME);
+    else {
+        snprintf(dir, BUFSIZ, "%s/%s", data_dir, FOLDER_NAME);
+    }
     mkdir(dir, 0755);
     snprintf(file, BUFSIZ, "%s/%s/%s", data_dir, FOLDER_NAME, SCORE_FILE);
     FILE *fptr = fopen(file, "r");
@@ -75,9 +85,14 @@ void _write_highscore(long score, int difficulty) {
     char file[BUFSIZ];
     char *data_dir = getenv("XDG_DATA_HOME");
     if (!data_dir) {
-        data_dir = "~/.local/share";
+        char *home = getenv("HOME");
+        if (!home)
+            return;
+        snprintf(dir, BUFSIZ, "%s/.local/share/%s", home, FOLDER_NAME);
     }
-    snprintf(dir, BUFSIZ, "%s/%s", data_dir, FOLDER_NAME);
+    else {
+        snprintf(dir, BUFSIZ, "%s/%s", data_dir, FOLDER_NAME);
+    }
     mkdir(dir, 0755);
     snprintf(file, BUFSIZ, "%s/%s/%s", data_dir, FOLDER_NAME, SCORE_FILE);
 
