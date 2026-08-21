@@ -26,7 +26,7 @@ void _fix_highscore_file() {
         snprintf(dir, BUFSIZ, "%s/%s", data_dir, FOLDER_NAME);
     }
     mkdir(dir, 0755);
-    snprintf(file, BUFSIZ, "%s/%s/%s", data_dir, FOLDER_NAME, SCORE_FILE);
+    snprintf(file, BUFSIZ, "%s/%s", dir, SCORE_FILE);
 
     FILE *fptr = fopen(file, "w");
     for (int i = 0; i < SCORING_DIFFICULTIES; i++) {
@@ -53,7 +53,7 @@ long _load_highscore(int difficulty) {
         snprintf(dir, BUFSIZ, "%s/%s", data_dir, FOLDER_NAME);
     }
     mkdir(dir, 0755);
-    snprintf(file, BUFSIZ, "%s/%s/%s", data_dir, FOLDER_NAME, SCORE_FILE);
+    snprintf(file, BUFSIZ, "%s/%s", dir, SCORE_FILE);
     FILE *fptr = fopen(file, "r");
     if (!fptr) {
         _fix_highscore_file();
@@ -94,7 +94,7 @@ void _write_highscore(long score, int difficulty) {
         snprintf(dir, BUFSIZ, "%s/%s", data_dir, FOLDER_NAME);
     }
     mkdir(dir, 0755);
-    snprintf(file, BUFSIZ, "%s/%s/%s", data_dir, FOLDER_NAME, SCORE_FILE);
+    snprintf(file, BUFSIZ, "%s/%s", dir, SCORE_FILE);
 
     FILE *fptr = fopen(file, "w");
     for (int i = 0; i < SCORING_DIFFICULTIES; i++) {
