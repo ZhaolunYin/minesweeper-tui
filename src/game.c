@@ -12,7 +12,17 @@
 
 #define SCORING_DIFFICULTIES 6
 
-void _fix_highscore_file(const char *file) {
+void _fix_highscore_file() {
+    char dir[BUFSIZ];
+    char file[BUFSIZ];
+    char *data_dir = getenv("XDG_DATA_HOME");
+    if (!data_dir) {
+        data_dir = "~/.local/share";
+    }
+    snprintf(dir, BUFSIZ, "%s/%s", data_dir, FOLDER_NAME);
+    mkdir(dir, 0755);
+    snprintf(file, BUFSIZ, "%s/%s/%s", data_dir, FOLDER_NAME, SCORE_FILE);
+
     FILE *fptr = fopen(file, "w");
     for (int i = 0; i < SCORING_DIFFICULTIES; i++) {
         fprintf(fptr, "0\n");
@@ -36,14 +46,14 @@ long _load_highscore(int difficulty) {
     snprintf(file, BUFSIZ, "%s/%s/%s", data_dir, FOLDER_NAME, SCORE_FILE);
     FILE *fptr = fopen(file, "r");
     if (!fptr) {
-        _fix_highscore_file(file);
+        _fix_highscore_file();
         return 0;
     }
     long long result[SCORING_DIFFICULTIES];
     for (int i = 0; i < SCORING_DIFFICULTIES; i++) {
         if (fscanf(fptr, "%lld", &result[i]) != 1) {
             fclose(fptr);
-            _fix_highscore_file(file);
+            _fix_highscore_file();
             return 0;
         }
     }
