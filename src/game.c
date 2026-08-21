@@ -5,6 +5,7 @@
 #include "ui.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 
 #define SAFE_ZONE 1
@@ -12,27 +13,32 @@
 
 #define SCORING_DIFFICULTIES 6
 
+char *_highscore_filename() {
+    char *buf = malloc(BUFSIZ);
+    char *cur = buf;
+    char *end = buf + BUFSIZ;
+    if (getenv("XDG_DATA_HOME")) {
+        cur += snprintf(cur, end - cur, "%s", getenv("XDG_DATA_HOME")); 
+    }
+    else if (getenv("HOME")) {
+        cur += snprintf(cur, end - cur, "%s/.local/share", getenv("HOME"));
+    }
+    cur += snprintf(cur, end - cur, "/%s", FOLDER_NAME);
+    mkdir(buf, 0755);
+    cur += snprintf(cur, end - cur, "/%s", SCORE_FILE);
+    return buf;
+}
+
 void _fix_highscore_file() {
-    char dir[BUFSIZ];
-    char file[BUFSIZ];
-    char *data_dir = getenv("XDG_DATA_HOME");
-    if (!data_dir) {
-        char *home = getenv("HOME");
-        if (!home)
-            return;
-        snprintf(dir, BUFSIZ, "%s/.local/share/%s", home, FOLDER_NAME);
-    }
-    else {
-        snprintf(dir, BUFSIZ, "%s/%s", data_dir, FOLDER_NAME);
-    }
-    mkdir(dir, 0755);
-    snprintf(file, BUFSIZ, "%s/%s", dir, SCORE_FILE);
+    char *file = _highscore_filename();
 
     FILE *fptr = fopen(file, "w");
     for (int i = 0; i < SCORING_DIFFICULTIES; i++) {
         fprintf(fptr, "0\n");
     }
     fclose(fptr);
+
+    free(file);
 }
 
 long _load_highscore(int difficulty) {
@@ -40,20 +46,7 @@ long _load_highscore(int difficulty) {
         difficulty = 0;
     if (difficulty > SCORING_DIFFICULTIES - 1)
         difficulty = SCORING_DIFFICULTIES - 1;
-    char dir[BUFSIZ];
-    char file[BUFSIZ];
-    char *data_dir = getenv("XDG_DATA_HOME");
-    if (!data_dir) {
-        char *home = getenv("HOME");
-        if (!home)
-            return 0;
-        snprintf(dir, BUFSIZ, "%s/.local/share/%s", home, FOLDER_NAME);
-    }
-    else {
-        snprintf(dir, BUFSIZ, "%s/%s", data_dir, FOLDER_NAME);
-    }
-    mkdir(dir, 0755);
-    snprintf(file, BUFSIZ, "%s/%s", dir, SCORE_FILE);
+    char *file = _highscore_filename();
     FILE *fptr = fopen(file, "r");
     if (!fptr) {
         _fix_highscore_file();
@@ -68,6 +61,7 @@ long _load_highscore(int difficulty) {
         }
     }
     fclose(fptr);
+    free(file);
     return result[difficulty];
 }
 
@@ -81,26 +75,13 @@ void _write_highscore(long score, int difficulty) {
         difficulty = 0;
     if (difficulty > SCORING_DIFFICULTIES - 1)
         difficulty = SCORING_DIFFICULTIES - 1;
-    char dir[BUFSIZ];
-    char file[BUFSIZ];
-    char *data_dir = getenv("XDG_DATA_HOME");
-    if (!data_dir) {
-        char *home = getenv("HOME");
-        if (!home)
-            return;
-        snprintf(dir, BUFSIZ, "%s/.local/share/%s", home, FOLDER_NAME);
-    }
-    else {
-        snprintf(dir, BUFSIZ, "%s/%s", data_dir, FOLDER_NAME);
-    }
-    mkdir(dir, 0755);
-    snprintf(file, BUFSIZ, "%s/%s", dir, SCORE_FILE);
-
+    char *file = _highscore_filename();
     FILE *fptr = fopen(file, "w");
     for (int i = 0; i < SCORING_DIFFICULTIES; i++) {
         fprintf(fptr, "%lld\n", scores[i]);
     }
     fclose(fptr);
+    free(file);
 }
 
 Game init_game() {
