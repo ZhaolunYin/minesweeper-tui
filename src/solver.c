@@ -243,7 +243,7 @@ bool _apply_basic_logic(Square *grid, int width, int height) {
 
 bool _apply_advanced_logic(Square *grid, int width, int height) {
     bool changed = false;
-    Square **visited = calloc(width * height, sizeof(Square *));
+    Square **visited = calloc((size_t) width * height, sizeof(Square *));
     int index = 0;
     FOR_EACH_IN_GRID(grid, width, height) {
         Square *sq1 = get_square(grid, width, height, x, y);
@@ -265,10 +265,10 @@ bool _apply_advanced_logic(Square *grid, int width, int height) {
 }
 
 bool solve_board(Square *grid, int width, int height, int x, int y) {
-    Square *copy = malloc(width * height * sizeof(Square));
+    Square *copy = malloc((size_t) width * height * sizeof(Square));
     if (!copy)
         return false;
-    memcpy(copy, grid, width * height * sizeof(Square));
+    memcpy(copy, grid, (size_t) width * height * sizeof(Square));
     select_square(&copy, width, height, x, y);
     bool changed = true;
     while (!all_selected(copy, width, height) && changed) {
