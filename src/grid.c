@@ -1,6 +1,8 @@
 #include "grid.h"
+#include "solver.h"
 #include <stddef.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 /// Function to search for item in list. Returns number of occurences
 int _find(int *list, int len, int item) {
@@ -32,6 +34,8 @@ Square *get_square(Square *grid, int width, int height, int x, int y) {
     else
         return NULL;
 }
+
+/// Flags square
 
 /// Select a square in a grid. Returns number of squares selected or -1 if a mine was selected. Returns 0 if selection was invalid
 int select_square(Square **grid, int width, int height, int x, int y) {
@@ -90,33 +94,39 @@ bool all_selected(Square *grid, int width, int height) {
 }
 
 /// Returns grid as a Square *. Square (x, y) of grid can be accessed using the notation grid[y * height + x]
-Square *create_grid(int width, int height, int mines, int x, int y, int safe_zone) {
-    Square *grid = (Square *) malloc((size_t) width * height * sizeof(Square));
-    int *mine_positions = (int *) malloc((size_t) mines * sizeof(int));
-    for (int i = 0; i < mines; i++)
-        mine_positions[i] = -1;
-    for (int i = 0; i < mines; i++) {
-        do {
-            mine_positions[i] = rand() % (width * height);
-        } while (_find(mine_positions, mines, mine_positions[i]) > 1 ||
-                _in_safe_zone(width, y * width + x, mine_positions[i], safe_zone));
-    }
-    for (int i = 0; i < width * height; i++) {
-        grid[i].mine = false;
-        grid[i].surrounding = 0;
-        grid[i].uncovered = false;
-        grid[i].flag = false;
-        grid[i].mine = (bool) _find(mine_positions, mines, i);
-    }
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
+Square *create_grid(int width, int height, int mines, int x, int y, int safe_zone, bool no_guess) {
+    Square *grid = NULL;
+    int c = 0;
+    for (;;) {
+        c++;
+        grid = (Square *) malloc((size_t) width * height * sizeof(Square));
+        int *mine_positions = (int *) malloc((size_t) mines * sizeof(int));
+        for (int i = 0; i < mines; i++)
+            mine_positions[i] = -1;
+        for (int i = 0; i < mines; i++) {
+            do {
+                mine_positions[i] = rand() % (width * height);
+            } while (_find(mine_positions, mines, mine_positions[i]) > 1 ||
+                    _in_safe_zone(width, y * width + x, mine_positions[i], safe_zone));
+        }
+        for (int i = 0; i < width * height; i++) {
+            grid[i].mine = false;
+            grid[i].surrounding = 0;
+            grid[i].uncovered = false;
+            grid[i].flag = false;
+            grid[i].mine = (bool) _find(mine_positions, mines, i);
+        }
+        FOR_EACH_IN_GRID(grid, width, height) {
             FOR_EACH_NEIGHBOUR(x, y, width, height) {
                 if (get_square(grid, width, height, rx, ry)->mine)
                     get_square(grid, width, height, x, y)->surrounding++;
             }
         }
+        free(mine_positions);
+        if (solve_board(grid, width, height, x, y) || !no_guess) {
+            break;
+        }
     }
-    free(mine_positions);
     if (select_square(&grid, width, height, x, y) == -1)
         return NULL;
     return grid;

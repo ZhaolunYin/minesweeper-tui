@@ -10,7 +10,7 @@
 #define SAFE_ZONE 1
 #define MIN_MINES 1
 
-#define SCORING_DIFFICULTIES 3
+#define SCORING_DIFFICULTIES 6
 
 void _fix_highscore_file(const char *file) {
     FILE *fptr = fopen(file, "w");
@@ -27,9 +27,10 @@ long _load_highscore(int difficulty) {
         difficulty = SCORING_DIFFICULTIES - 1;
     char dir[BUFSIZ];
     char file[BUFSIZ];
-    snprintf(dir, BUFSIZ, "%s/%s", getenv("XDG_DATA_HOME"), FOLDER_NAME);
+    char *data_dir = getenv("XDG_DATA_HOME");
+    snprintf(dir, BUFSIZ, "%s/%s", data_dir, FOLDER_NAME);
     mkdir(dir, 0755);
-    snprintf(file, BUFSIZ, "%s/%s", dir, SCORE_FILE);
+    snprintf(file, BUFSIZ, "%s/%s/%s", data_dir, FOLDER_NAME, SCORE_FILE);
     FILE *fptr = fopen(file, "r");
     if (!fptr) {
         _fix_highscore_file(file);
@@ -48,7 +49,7 @@ long _load_highscore(int difficulty) {
 }
 
 void _write_highscore(long score, int difficulty) {
-    long long scores[3];
+    long long scores[SCORING_DIFFICULTIES];
     for (int i = 0; i < SCORING_DIFFICULTIES; i++) {
         scores[i] = _load_highscore(i);
     }
@@ -59,9 +60,10 @@ void _write_highscore(long score, int difficulty) {
         difficulty = SCORING_DIFFICULTIES - 1;
     char dir[BUFSIZ];
     char file[BUFSIZ];
-    snprintf(dir, BUFSIZ, "%s/%s", getenv("XDG_DATA_HOME"), FOLDER_NAME);
+    char *data_dir = getenv("XDG_DATA_HOME");
+    snprintf(dir, BUFSIZ, "%s/%s", data_dir, FOLDER_NAME);
     mkdir(dir, 0755);
-    snprintf(file, BUFSIZ, "%s/%s", dir, SCORE_FILE);
+    snprintf(file, BUFSIZ, "%s/%s/%s", data_dir, FOLDER_NAME, SCORE_FILE);
 
     FILE *fptr = fopen(file, "w");
     for (int i = 0; i < SCORING_DIFFICULTIES; i++) {
@@ -81,18 +83,39 @@ Game init_game() {
             game.width = 9;
             game.height = 9;
             game.mines = 10;
+            game.no_guess = false;
             break;
         case 1:
+            game.width = 9;
+            game.height = 9;
+            game.mines = 10;
+            game.no_guess = true;
+            break;
+        case 2:
             game.width = 16;
             game.height = 16;
             game.mines = 40;
+            game.no_guess = false;
             break;
-        case 2:
+        case 3:
+            game.width = 16;
+            game.height = 16;
+            game.mines = 40;
+            game.no_guess = true;
+            break;
+        case 4:
             game.width = 30;
             game.height = 16;
             game.mines = 99;
+            game.no_guess = false;
             break;
-        case 3:
+        case 5:
+            game.width = 30;
+            game.height = 16;
+            game.mines = 99;
+            game.no_guess = true;
+            break;
+        case 6:
             select_custom(result, game.max_x, game.max_y);
             // If win on one click - 
             // Safezone * 2 + 1 is minimum width / height first click uncovers
@@ -119,6 +142,7 @@ Game init_game() {
             game.width = result[0];
             game.height = result[1];
             game.mines = result[2];
+            game.no_guess = false;
             break;
     }
 
@@ -147,8 +171,8 @@ void game_loop(Game *game) {
     wrefresh(game->board);
 
     do {
-        if (move_cursor(game->board, NULL, game->width, game->height, &game->cursor_x, &game->cursor_y, NULL))
-            game->grid = create_grid(game->width, game->height, game->mines, game->cursor_x, game->cursor_y, SAFE_ZONE);
+        if (move_cursor(game->board, NULL, game->width, game->height, &game->cursor_x, &game->cursor_y, NULL, game->mines))
+            game->grid = create_grid(game->width, game->height, game->mines, game->cursor_x, game->cursor_y, SAFE_ZONE, game->no_guess);
     } while (!game->grid);
 
     struct timespec start;
@@ -164,7 +188,7 @@ void game_loop(Game *game) {
             draw_grid(game->board, game->grid, width_to_board_width(game->width), height_to_board_height(game->height), game->difficulty, false);
             draw_stats(game->board, game->mines, game->flags, game->score / 1000);
             wrefresh(game->board);
-            if (move_cursor(game->board, game->grid, game->width, game->height, &game->cursor_x, &game->cursor_y, &game->flags)) {
+            if (move_cursor(game->board, game->grid, game->width, game->height, &game->cursor_x, &game->cursor_y, &game->flags, game->mines)) {
                 selected = select_square(&game->grid, game->width, game->height, game->cursor_x, game->cursor_y);
             }
             struct timespec now;

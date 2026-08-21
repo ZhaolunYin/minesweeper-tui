@@ -5,6 +5,7 @@
 
 typedef struct {
     int difficulty;
+    int no_guess;
     int width;
     int height;
     int mines;

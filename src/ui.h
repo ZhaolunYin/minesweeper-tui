@@ -1,13 +1,16 @@
 #pragma once
 #include <stdbool.h>
 
-#define DIFFICULTY_LINES 5
-#define DIFFICULTY_OPS 4
+#define DIFFICULTY_LINES 8
+#define DIFFICULTY_OPS 7
 #define DIFFICULTIES (const char *[DIFFICULTY_LINES]) { \
         "Select difficulty", \
         "Beginner", \
+        "Beginner - No guess", \
         "Intermediate", \
+        "Intermediate - No guess", \
         "Expert", \
+        "Expert - No guess", \
         "Custom", \
 }
 

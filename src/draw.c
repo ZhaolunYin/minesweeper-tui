@@ -2,6 +2,7 @@
 #include "grid.h"
 #include "ui.h"
 
+#include <stddef.h>
 #include <string.h>
 
 #define SYMBOLS (const char[9]) { '.', '1', '2', '3', '4', '5', '6', '7', '8' }
@@ -21,11 +22,21 @@ void init_color_pairs() {
 /// Draws grid on board with specified dimensions.
 void draw_grid(WINDOW *board, Square *grid, int board_width, int board_height, int difficulty, bool show_all) {
     box(board, 0, 0);
-    const char *difficulty_text = DIFFICULTIES[DIFFICULTY_LINES - DIFFICULTY_OPS + difficulty];
-    if (strlen("Minesweeper-") + strlen(difficulty_text) < (size_t) board_width)
-        mvwprintw(board, 0, 0, "Minesweeper-%s", difficulty_text);
-    else if (strlen(difficulty_text) < (size_t) board_width)
-        mvwprintw(board, 0, (board_width - strlen(difficulty_text)) / 2, "%s", difficulty_text);
+    const char *difficulty_text = DIFFICULTIES[DIFFICULTY_LINES - DIFFICULTY_OPS + difficulty - (difficulty % 2)];
+    if (difficulty % 2 == 1) {
+        if (strlen("Minesweeper-") + strlen(difficulty_text) + strlen("-No guess") < (size_t) board_width)
+            mvwprintw(board, 0, 0, "Minesweeper-%s-No guess", difficulty_text);
+        else if (strlen(difficulty_text) + strlen("-No guess") < (size_t) board_width)
+            mvwprintw(board, 0, 0, "%s-No guess", difficulty_text);
+        else if (strlen(difficulty_text) < (size_t) board_width)
+            mvwprintw(board, 0, (board_width - strlen(difficulty_text)) / 2, "%s", difficulty_text);
+    }
+    else {
+        if (strlen("Minesweeper-") + strlen(difficulty_text) < (size_t) board_width)
+            mvwprintw(board, 0, 0, "Minesweeper-%s", difficulty_text);
+        else if (strlen(difficulty_text) < (size_t) board_width)
+            mvwprintw(board, 0, (board_width - strlen(difficulty_text)) / 2, "%s", difficulty_text);
+    }
 
     if (!grid) {
         for (int y = 2; y < board_height - 1; y++) {
@@ -78,7 +89,7 @@ void draw_grid(WINDOW *board, Square *grid, int board_width, int board_height, i
 }
 
 /// Reads input and moves cursor. Returns true if enter was pressed or false if not
-bool move_cursor(WINDOW *win, Square *grid, int width, int height, int *cursor_x, int *cursor_y, int *flag_n) {
+bool move_cursor(WINDOW *win, Square *grid, int width, int height, int *cursor_x, int *cursor_y, int *flag_n, int mine_n) {
     wmove(win, (*cursor_y) + 2, (*cursor_x) * 2 + 1);
     int ch = wgetch(win);
     MEVENT event;
@@ -107,6 +118,8 @@ bool move_cursor(WINDOW *win, Square *grid, int width, int height, int *cursor_x
             if (grid && flag_n) {
                 Square *square = get_square(grid, width, height, *cursor_x, *cursor_y);
                 if (!square->uncovered) {
+                    if (!square->flag && *flag_n >= mine_n)
+                        break;
                     square->flag = !square->flag;
                     if (square->flag)
                         (*flag_n)++;
@@ -137,6 +150,8 @@ bool move_cursor(WINDOW *win, Square *grid, int width, int height, int *cursor_x
                     if (grid && flag_n) {
                         Square *square = get_square(grid, width, height, *cursor_x, *cursor_y);
                         if (!square->uncovered) {
+                            if (!square->flag && *flag_n >= mine_n)
+                                break;
                             square->flag = !square->flag;
                             if (square->flag)
                                 (*flag_n)++;
