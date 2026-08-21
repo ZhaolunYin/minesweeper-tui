@@ -29,10 +29,7 @@ long _load_highscore(int difficulty) {
     char file[BUFSIZ];
     char *data_dir = getenv("XDG_DATA_HOME");
     if (!data_dir) {
-        char temp[BUFSIZ];
-        data_dir = getenv("HOME");
-        snprintf(temp, sizeof(temp), "%s/.local/share", data_dir); 
-        data_dir = temp;
+        data_dir = "~/.local/share";
     }
     snprintf(dir, BUFSIZ, "%s/%s", data_dir, FOLDER_NAME);
     mkdir(dir, 0755);
@@ -68,10 +65,7 @@ void _write_highscore(long score, int difficulty) {
     char file[BUFSIZ];
     char *data_dir = getenv("XDG_DATA_HOME");
     if (!data_dir) {
-        char temp[BUFSIZ];
-        data_dir = getenv("HOME");
-        snprintf(temp, sizeof(temp), "%s/.local/share", data_dir); 
-        data_dir = temp;
+        data_dir = "~/.local/share";
     }
     snprintf(dir, BUFSIZ, "%s/%s", data_dir, FOLDER_NAME);
     mkdir(dir, 0755);
