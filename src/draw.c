@@ -1,3 +1,4 @@
+#include "board.h"
 #include "draw.h"
 #include "grid.h"
 #include "ui.h"
@@ -140,10 +141,10 @@ bool move_cursor(WINDOW *win, Square *grid, int width, int height, int *cursor_x
                 getmaxyx(win, maxy, maxx);
                 int x = event.x - startx;
                 int y = event.y - starty;
-                if (x < 1 || x >= maxx - 1 || y < 1 || y >= maxy - 1)
+                if (x < BOX_WIDTH / 2 || x >= maxx - BOX_WIDTH / 2 || y < BOX_WIDTH / 2 + STATS_ROW || y >= maxy - BOX_WIDTH / 2)
                     break;
-                *cursor_x = (x - 1) / 2;
-                *cursor_y = y - 2;
+                *cursor_x = board_x_to_x(x);
+                *cursor_y = board_y_to_y(y);
                 if (event.bstate & BUTTON1_PRESSED)
                     return true;
                 else if (event.bstate & BUTTON3_PRESSED) {
@@ -158,7 +159,6 @@ bool move_cursor(WINDOW *win, Square *grid, int width, int height, int *cursor_x
                             else
                                 (*flag_n)--;
                         }
-
                     }
                 }
                 break;
@@ -166,7 +166,7 @@ bool move_cursor(WINDOW *win, Square *grid, int width, int height, int *cursor_x
         default:
             break;
     }
-    wmove(win, (*cursor_y) + 2, (*cursor_x) * 2 + 1);
+    wmove(win, y_to_board_y(*cursor_y), x_to_board_x(*cursor_x));
     wrefresh(win);
     return false;
 }
