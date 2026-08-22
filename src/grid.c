@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 /// Function to search for item in list. Returns number of occurences
-int _find(int *list, int len, int item) {
+static int _find(int *list, int len, int item) {
     int c = 0;
     for (int i = 0; i < len; i++) {
         if (list[i] == item) {
@@ -15,7 +15,7 @@ int _find(int *list, int len, int item) {
     return c;
 }
 
-bool _in_safe_zone(int width, int pos1, int pos2, int dist) {
+static bool _in_safe_zone(int width, int pos1, int pos2, int dist) {
     int x1 = pos1 % width;
     int y1 = pos1 / width;
     int x2 = pos2 % width;

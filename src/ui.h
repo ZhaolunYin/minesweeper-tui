@@ -19,6 +19,7 @@
 
 #define CUSTOM_LINES 3
 #define CUSTOM_MAX_DIGITS 3
+#define CUSTOM_MAX_VALUE 999
 
 int select_difficulty(int term_width, int term_height);
 bool select_play_again(int term_width, bool win, long long score, long long highscore);

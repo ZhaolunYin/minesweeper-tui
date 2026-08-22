@@ -13,7 +13,7 @@
 
 #define SCORING_DIFFICULTIES 6
 
-char *_highscore_filename() {
+static char *_highscore_filename() {
     char *buf = malloc(BUFSIZ);
     char *cur = buf;
     char *end = buf + BUFSIZ;
@@ -29,7 +29,7 @@ char *_highscore_filename() {
     return buf;
 }
 
-void _fix_highscore_file() {
+static void _fix_highscore_file() {
     char *file = _highscore_filename();
 
     FILE *fptr = fopen(file, "w");
@@ -41,7 +41,7 @@ void _fix_highscore_file() {
     free(file);
 }
 
-long _load_highscore(int difficulty) {
+static long _load_highscore(int difficulty) {
     if (difficulty < 0)
         difficulty = 0;
     if (difficulty > SCORING_DIFFICULTIES - 1)
@@ -65,7 +65,7 @@ long _load_highscore(int difficulty) {
     return result[difficulty];
 }
 
-void _write_highscore(long score, int difficulty) {
+static void _write_highscore(long score, int difficulty) {
     long long scores[SCORING_DIFFICULTIES];
     for (int i = 0; i < SCORING_DIFFICULTIES; i++) {
         scores[i] = _load_highscore(i);

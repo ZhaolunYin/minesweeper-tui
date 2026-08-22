@@ -3,31 +3,18 @@
 #include <string.h>
 #include <ncurses.h>
 
-int _pow(int a, int b) {
-    int result = 1;
-    for (int i = 0; i < b; i++)
-        result *= a;
-    return result;
-}
-
-int select_difficulty(int term_width, int term_height) {
-    int width = 0;
-    for (int i = 0; i < DIFFICULTY_LINES; i++) {
-        if ((int) strlen(DIFFICULTIES[i]) > width)
-            width = strlen(DIFFICULTIES[i]);
-    }
-    width += 2;
-    WINDOW *window = newwin(DIFFICULTY_LINES + 2, width, (term_height - (DIFFICULTY_LINES + 2)) / 2, (term_width - width) / 2);
+static int _select_menu(int x, int y, int width, int height, int n_lines, int n_options, const char **lines) {
+    WINDOW *window = newwin(height, width, y, x);
     keypad(window, true);
     int cv = curs_set(0);
     int ch = 0;
     int opt = 0;
     while (ch != KEY_ENTER && ch != '\n' && ch != '\r') {
         box(window, 0, 0);
-        for (int i = 0; i < DIFFICULTY_LINES; i++) {
-            if (i == opt + DIFFICULTY_LINES - DIFFICULTY_OPS)
+        for (int i = 0; i < n_lines; i++) {
+            if (i == opt + n_lines - n_options)
                 wattron(window, A_REVERSE);
-            mvwprintw(window, i + 1, 1, "%s", DIFFICULTIES[i]);
+            mvwprintw(window, i + 1, 1, "%s", lines[i]);
             wattroff(window, A_REVERSE);
         }
         wrefresh(window);
@@ -41,17 +28,17 @@ int select_difficulty(int term_width, int term_height) {
                 break;
             case KEY_DOWN:
             case 'j':
-                if (opt < DIFFICULTY_OPS - 1)
+                if (opt < n_options - 1)
                     opt++;
                 break;
 
             case KEY_MOUSE:
                 if (getmouse(&event) == OK && wenclose(window, event.y, event.x)) {
-                    int relative_x = event.x - ((term_width - width) / 2);
-                    int relative_y = event.y - ((term_height - (DIFFICULTY_LINES + 2)) / 2);
+                    int relative_x = event.x - x;
+                    int relative_y = event.y - y;
                     if (event.bstate & BUTTON1_PRESSED) {
-                        if (relative_x > 0 && relative_x < width - 1 && relative_y > 0 && relative_y < DIFFICULTY_LINES + 1) {
-                            opt = (relative_y - 1) - DIFFICULTY_LINES + DIFFICULTY_OPS;
+                        if (relative_x > 0 && relative_x < width - 1 && relative_y > 0 && relative_y < height - 1) {
+                            opt = (relative_y - 1) - n_options + n_lines;
                             ch = KEY_ENTER;
                         }
                     }
@@ -63,6 +50,23 @@ int select_difficulty(int term_width, int term_height) {
     curs_set(cv);
     refresh();
     return opt;
+}
+
+int select_difficulty(int term_width, int term_height) {
+    int width = 0;
+    for (int i = 0; i < DIFFICULTY_LINES; i++) {
+        if ((int) strlen(DIFFICULTIES[i]) > width)
+            width = strlen(DIFFICULTIES[i]);
+    }
+    width += 2;
+    return _select_menu(
+            (term_width - width) / 2,
+            (term_height - (DIFFICULTY_LINES + 2)) / 2,
+            width,
+            DIFFICULTY_LINES + 2,
+            DIFFICULTY_LINES,
+            DIFFICULTY_OPS,
+            DIFFICULTIES);
 }
 
 bool select_play_again(int term_width, bool win, long long score, long long highscore) {
@@ -94,52 +98,14 @@ bool select_play_again(int term_width, bool win, long long score, long long high
             width = strlen(lines[i]);
     }
     width += 2;
-    WINDOW *window = newwin(PLAY_AGAIN_LINES + 2, width, 1, (term_width - width) / 2);
-    keypad(window, true);
-    int cv = curs_set(0);
-    int ch = 0;
-    int opt = 0;
-    while (ch != KEY_ENTER && ch != '\n' && ch != '\r') {
-        box(window, 0, 0);
-        for (int i = 0; i < PLAY_AGAIN_LINES; i++) {
-            if (i == opt + PLAY_AGAIN_LINES - PLAY_AGAIN_OPS)
-                wattron(window, A_REVERSE);
-            mvwprintw(window, i + 1, 1, "%s", lines[i]);
-            wattroff(window, A_REVERSE);
-        }
-        wrefresh(window);
-        ch = wgetch(window);
-        MEVENT event;
-        switch (ch) {
-            case KEY_UP:
-            case 'k':
-                if (opt > 0)
-                    opt--;
-                break;
-            case KEY_DOWN:
-            case 'j':
-                if (opt < PLAY_AGAIN_OPS - 1)
-                    opt++;
-                break;
-
-            case KEY_MOUSE:
-                if (getmouse(&event) == OK && wenclose(window, event.y, event.x)) {
-                    int relative_x = event.x - ((term_width - width) / 2);
-                    int relative_y = event.y - 1;
-                    if (event.bstate & BUTTON1_PRESSED) {
-                        if (relative_x > 0 && relative_x < width - 1 && relative_y > 0 && relative_y < PLAY_AGAIN_LINES + 1) {
-                            opt = (relative_y - 1) - (PLAY_AGAIN_LINES - PLAY_AGAIN_OPS);
-                            ch = KEY_ENTER;
-                        }
-                    }
-                }
-                break;
-        }
-    }
-    delwin(window);
-    curs_set(cv);
-    refresh();
-    return (bool) !opt;
+    return (bool) _select_menu(
+            (term_width - width) / 2,
+            1,
+            width,
+            PLAY_AGAIN_LINES + 2,
+            PLAY_AGAIN_LINES,
+            PLAY_AGAIN_OPS,
+            (const char **) lines);
 }
 
 void select_custom(int *result, int term_width, int term_height) {
@@ -172,7 +138,7 @@ void select_custom(int *result, int term_width, int term_height) {
             wrefresh(window);
             ch = wgetch(window);
             if (ch >= '0' && ch <= '9') {
-                if (values[i] / _pow(10, CUSTOM_MAX_DIGITS - 1) > 0)
+                if (values[i] > CUSTOM_MAX_VALUE / 10)
                     continue;
                 values[i] *= 10;
                 values[i] += ch - '0';
