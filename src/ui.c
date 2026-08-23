@@ -108,13 +108,19 @@ bool select_play_again(int term_width, bool win, long long score, long long high
             (const char **) lines);
 }
 
-void select_custom(int *result, int term_width, int term_height) {
+void select_custom(int *result, int term_width, int term_height, int ops[CUSTOM_LINES]) {
     const char *lines[CUSTOM_LINES] = {
         "Width: ",
         "Height:",
         "Mines: ",
     };
-    int values[CUSTOM_LINES] = { 30, 30, 160 };
+    int values[CUSTOM_LINES];
+    for (int i = 0; i < CUSTOM_LINES; i++) {
+        if (ops[i])
+            values[i] = ops[i];
+        else
+            values[i] = CUSTOM_DEFAULTS[i];
+    }
     int width = 0;
     for (int i = 0; i < CUSTOM_LINES; i++) {
         if ((int) strlen(lines[i]) > width)

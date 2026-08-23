@@ -42,10 +42,8 @@ static void _fix_highscore_file() {
 }
 
 static long _load_highscore(int difficulty) {
-    if (difficulty < 0)
-        difficulty = 0;
-    if (difficulty > SCORING_DIFFICULTIES - 1)
-        difficulty = SCORING_DIFFICULTIES - 1;
+    if (difficulty < 0 || difficulty > SCORING_DIFFICULTIES - 1)
+        return 0;
     char *file = _highscore_filename();
     FILE *fptr = fopen(file, "r");
     if (!fptr) {
@@ -71,10 +69,8 @@ static void _write_highscore(long score, int difficulty) {
         scores[i] = _load_highscore(i);
     }
     scores[difficulty] = score;
-    if (difficulty < 0)
-        difficulty = 0;
-    if (difficulty > SCORING_DIFFICULTIES - 1)
-        difficulty = SCORING_DIFFICULTIES - 1;
+    if (difficulty < 0 || difficulty > SCORING_DIFFICULTIES - 1)
+        return;
     char *file = _highscore_filename();
     FILE *fptr = fopen(file, "w");
     for (int i = 0; i < SCORING_DIFFICULTIES; i++) {
@@ -84,78 +80,105 @@ static void _write_highscore(long score, int difficulty) {
     free(file);
 }
 
-Game init_game() {
+static void _clamp_custom(int *result, int max_x, int max_y) {
+    // If win on one click - 
+    // Safezone * 2 + 1 is minimum width / height first click uncovers
+    if (result[0] < SAFE_ZONE * 2 + 2)
+        result[0] = SAFE_ZONE * 2 + 2;
+    if (result[1] < SAFE_ZONE * 2 + 2)
+        result[1] = SAFE_ZONE * 2 + 2;
+
+    // If bigger than screen
+    if (result[0] > board_width_to_width(max_x) - 1)
+        result[0] = board_width_to_width(max_x) - 1;
+    if (result[1] > board_height_to_height(max_y) - 1)
+        result[1] = board_height_to_height(max_y) - 1;
+
+    // If too little mines
+    if (result[2] < MIN_MINES)
+        result[2] = MIN_MINES;
+
+    // If no of mines causes 1st click win or impossible 1st click
+    if (result[2] > result[0] * result[1] - ((SAFE_ZONE * 2 + 1) * (SAFE_ZONE * 2 + 1) + 1))
+        result[2] = result[0] * result[1] - ((SAFE_ZONE * 2 + 1) * (SAFE_ZONE * 2 + 1) + 1);
+}
+
+Game init_game(int width, int height, int mines) {
     Game game;
     getmaxyx(stdscr, game.max_y, game.max_x);
 
-    int result[3];
-    game.difficulty = select_difficulty(game.max_x, game.max_y);
-    switch (game.difficulty) {
-        case 0:
-            game.width = 9;
-            game.height = 9;
-            game.mines = 10;
-            game.no_guess = false;
-            break;
-        case 1:
-            game.width = 9;
-            game.height = 9;
-            game.mines = 10;
-            game.no_guess = true;
-            break;
-        case 2:
-            game.width = 16;
-            game.height = 16;
-            game.mines = 40;
-            game.no_guess = false;
-            break;
-        case 3:
-            game.width = 16;
-            game.height = 16;
-            game.mines = 40;
-            game.no_guess = true;
-            break;
-        case 4:
-            game.width = 30;
-            game.height = 16;
-            game.mines = 99;
-            game.no_guess = false;
-            break;
-        case 5:
-            game.width = 30;
-            game.height = 16;
-            game.mines = 99;
-            game.no_guess = true;
-            break;
-        case 6:
-            select_custom(result, game.max_x, game.max_y);
-            // If win on one click - 
-            // Safezone * 2 + 1 is minimum width / height first click uncovers
-            if (result[0] < SAFE_ZONE * 2 + 2)
-                result[0] = SAFE_ZONE * 2 + 2;
-            if (result[1] < SAFE_ZONE * 2 + 2)
-                result[1] = SAFE_ZONE * 2 + 2;
+    if (!width && !height && !mines) {
+        int result[CUSTOM_LINES];
+        game.difficulty = select_difficulty(game.max_x, game.max_y);
+        switch (game.difficulty) {
+            case 0:
+                game.width = 9;
+                game.height = 9;
+                game.mines = 10;
+                game.no_guess = false;
+                break;
+            case 1:
+                game.width = 9;
+                game.height = 9;
+                game.mines = 10;
+                game.no_guess = true;
+                break;
+            case 2:
+                game.width = 16;
+                game.height = 16;
+                game.mines = 40;
+                game.no_guess = false;
+                break;
+            case 3:
+                game.width = 16;
+                game.height = 16;
+                game.mines = 40;
+                game.no_guess = true;
+                break;
+            case 4:
+                game.width = 30;
+                game.height = 16;
+                game.mines = 99;
+                game.no_guess = false;
+                break;
+            case 5:
+                game.width = 30;
+                game.height = 16;
+                game.mines = 99;
+                game.no_guess = true;
+                break;
+            case 6:
+                select_custom(result, game.max_x, game.max_y, (int *) CUSTOM_DEFAULTS);
+                _clamp_custom(result, game.max_x, game.max_y);
+                // Assign
+                game.width = result[0];
+                game.height = result[1];
+                game.mines = result[2];
+                game.no_guess = false;
+                break;
+        }
+    }
+    else if (!width || !height || !mines) {
+        game.difficulty = CUSTOM_DIFFICULTY;
+        int values[CUSTOM_LINES] = { width, height, mines };
+        int result[CUSTOM_LINES];
 
-            // If bigger than screen
-            if (result[0] > board_width_to_width(game.max_x) - 1)
-                result[0] = board_width_to_width(game.max_x) - 1;
-            if (result[1] > board_height_to_height(game.max_y) - 1)
-                result[1] = board_height_to_height(game.max_y) - 1;
-
-            // If too little mines
-            if (result[2] < MIN_MINES)
-                result[2] = MIN_MINES;
-
-            // If no of mines causes 1st click win or impossible 1st click
-            if (result[2] > result[0] * result[1] - (SAFE_ZONE * 2 + 1) * (SAFE_ZONE * 2 + 1) + 1)
-                result[2] = result[0] * result[1] - (SAFE_ZONE * 2 + 1) * (SAFE_ZONE * 2 + 1) + 1;
-
-            // Assign
-            game.width = result[0];
-            game.height = result[1];
-            game.mines = result[2];
-            game.no_guess = false;
-            break;
+        select_custom(result, game.max_x, game.max_y, values);
+        _clamp_custom(result, game.max_x, game.max_y);
+        // Assign
+        game.width = result[0];
+        game.height = result[1];
+        game.mines = result[2];
+        game.no_guess = false;
+    }
+    else {
+        game.difficulty = CUSTOM_DIFFICULTY;
+        int values[CUSTOM_LINES] = { width, height, mines };
+        _clamp_custom(values, game.max_x, game.max_y);
+        game.width = values[0];
+        game.height = values[1];
+        game.mines = values[2];
+        game.no_guess = false;
     }
 
     int board_height = height_to_board_height(game.height);
@@ -213,7 +236,8 @@ void game_loop(Game *game) {
 bool end_game(Game *game) {
     draw_grid(game->board, game->grid, width_to_board_width(game->width), height_to_board_height(game->height), game->difficulty, true);
     wrefresh(game->board);
-    if ((!game->highscore || game->score < game->highscore) && game->win) {
+    if ((!game->highscore || game->score < game->highscore) && game->win && 
+            !(game->difficulty < 0 || game->difficulty > SCORING_DIFFICULTIES - 1)) {
         game->highscore = game->score;
         _write_highscore(game->highscore, game->difficulty);
     }
