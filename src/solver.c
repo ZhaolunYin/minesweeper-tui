@@ -145,7 +145,6 @@ static bool _1_1_pattern(Square *grid, int width, int height, int x1, int y1, in
     return changed;
 }
 
-
 static bool _1_2_pattern(Square *grid, int width, int height, int x1, int y1, int x2, int y2) {
     bool changed = false;
     Neighbours a = _get_neighbours(grid, width, height, x1, y1);
@@ -172,6 +171,11 @@ static bool _1_2_pattern(Square *grid, int width, int height, int x1, int y1, in
         Neighbours to_flag = _get_unshared_covered(&b, &a);
         for (int i = 0; i < to_flag.n; i++) {
             to_flag.square[i]->flag = true;
+            changed = true;
+        }
+        Neighbours to_uncover = _get_unshared_covered(&a, &b);
+        for (int i = 0; i < to_uncover.n; i++) {
+            select_square(&grid, width, height, to_uncover.x[i], to_uncover.y[i]);
             changed = true;
         }
     }
