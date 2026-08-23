@@ -41,7 +41,7 @@ static void _fix_highscore_file() {
     free(file);
 }
 
-static long _load_highscore(int difficulty) {
+static long long _load_highscore(int difficulty) {
     if (difficulty < 0 || difficulty > SCORING_DIFFICULTIES - 1)
         return 0;
     char *file = _highscore_filename();
@@ -103,13 +103,51 @@ static void _clamp_custom(int *result, int max_x, int max_y) {
         result[2] = result[0] * result[1] - ((SAFE_ZONE * 2 + 1) * (SAFE_ZONE * 2 + 1) + 1);
 }
 
-Game init_game(int width, int height, int mines) {
+void show_highscores() {
+    size_t width = 0;
+    for (int i = 0; i < SCORING_DIFFICULTIES; i++) {
+        size_t len = strlen(DIFFICULTIES[i + DIFFICULTY_LINES - DIFFICULTY_OPS]);
+        if (len > width)
+            width = len;
+    }
+    width += 1;
+    const char *col1 = "Difficulty";
+    const char *col2 = "Time";
+
+    printf("%s", col1);
+    // + 1 for colon
+    for (size_t i = 0; i < width - strlen(col1) + 1; i++)
+        printf(" ");
+    printf("%s\n", col2);
+
+    // + 1 for colon
+    for (size_t i = 0; i < width + 1; i++)
+        printf("-");
+
+    for (size_t i = 0; i < strlen(col2) + 1; i++)
+        printf("-");
+    printf("\n");
+
+    for (int i = 0; i < SCORING_DIFFICULTIES; i++) {
+        long long score = _load_highscore(i);
+        printf("%s:", DIFFICULTIES[i + 1]);
+        size_t len = strlen(DIFFICULTIES[i + DIFFICULTY_LINES - DIFFICULTY_OPS]);
+        for (size_t j = 0; j < width - len; j++)
+            printf(" ");
+        if (score)
+            printf("%lld.%3.llds\n", score / 1000, score % 1000);
+        else
+            printf("None\n");
+    }
+}
+
+Game init_game(int width, int height, int mines, char *difficulty, bool no_guess) {
     Game game;
     getmaxyx(stdscr, game.max_y, game.max_x);
 
     if (!width && !height && !mines) {
         int result[CUSTOM_LINES];
-        game.difficulty = select_difficulty(game.max_x, game.max_y);
+        game.difficulty = select_difficulty(game.max_x, game.max_y, difficulty, no_guess);
         switch (game.difficulty) {
             case 0:
                 game.width = 9;
@@ -233,11 +271,12 @@ void game_loop(Game *game) {
     }
 }
 
-bool end_game(Game *game) {
+bool end_game(Game *game, bool save_highscores) {
     draw_grid(game->board, game->grid, width_to_board_width(game->width), height_to_board_height(game->height), game->difficulty, true);
     wrefresh(game->board);
     if ((!game->highscore || game->score < game->highscore) && game->win && 
-            !(game->difficulty < 0 || game->difficulty > SCORING_DIFFICULTIES - 1)) {
+            !(game->difficulty < 0 || game->difficulty > SCORING_DIFFICULTIES - 1) &&
+            save_highscores) {
         game->highscore = game->score;
         _write_highscore(game->highscore, game->difficulty);
     }

@@ -1,4 +1,5 @@
 #include "ui.h"
+#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 #include <ncurses.h>
@@ -52,7 +53,22 @@ static int _select_menu(int x, int y, int width, int height, int n_lines, int n_
     return opt;
 }
 
-int select_difficulty(int term_width, int term_height) {
+int select_difficulty(int term_width, int term_height, char *difficulty, bool no_guess) {
+    if (difficulty) {
+        for (char *p = difficulty; *p; p++) {
+            *p = tolower(*p);
+        }
+        for (int i = 0; i < DIFFICULTY_OPS - 1; i++) {
+            char level[BUFSIZ];
+            snprintf(level, BUFSIZ, "%s", DIFFICULTIES[i + DIFFICULTY_LINES - DIFFICULTY_OPS]);
+            for (char *p = level; *p; p++) {
+                *p = tolower(*p);
+            }
+            if (strcmp(difficulty, level) == 0 && i != CUSTOM_DIFFICULTY + DIFFICULTY_OPS - DIFFICULTY_LINES)
+                return (i + no_guess);
+        }
+    }
+
     int width = 0;
     for (int i = 0; i < DIFFICULTY_LINES; i++) {
         if ((int) strlen(DIFFICULTIES[i]) > width)

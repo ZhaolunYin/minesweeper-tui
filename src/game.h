@@ -28,6 +28,7 @@ typedef struct {
 #define FOLDER_NAME "minesweeper-tui"
 #define SCORE_FILE "score"
 
-Game init_game(int width, int height, int mines);
+void show_highscores();
+Game init_game(int width, int height, int mines, char *difficulty, bool no_guess);
 void game_loop(Game *game);
-bool end_game(Game *game);
+bool end_game(Game *game, bool save_highscores);
