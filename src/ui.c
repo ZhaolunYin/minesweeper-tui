@@ -98,7 +98,7 @@ bool select_play_again(int term_width, bool win, long long score, long long high
             width = strlen(lines[i]);
     }
     width += 2;
-    return (bool) _select_menu(
+    return (bool) !_select_menu(
             (term_width - width) / 2,
             1,
             width,
