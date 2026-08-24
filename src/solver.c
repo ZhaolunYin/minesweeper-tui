@@ -1,8 +1,8 @@
-#include "solver.h"
-#include "grid.h"
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+
+#include "ms.h"
 
 static Neighbours _get_neighbours(Square *grid, int width, int height, int x, int y) {
     Neighbours neighbours;

@@ -1,8 +1,9 @@
-#include "ui.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 #include <ncurses.h>
+
+#include "ms.h"
 
 static int _select_menu(int x, int y, int width, int height, int n_lines, int n_options, const char **lines) {
     WINDOW *window = newwin(height, width, y, x);
@@ -100,7 +101,7 @@ bool select_play_again(int term_width, bool win, long long score, long long high
         "Yes",
         "No",
     };
-    if (win)
+    if (win && score)
         snprintf(score_text, sizeof(score_text), "Score: %lld.%3.llds", score / 1000, score % 1000);
     else
         snprintf(score_text, sizeof(score_text), "Score: None");
@@ -124,19 +125,25 @@ bool select_play_again(int term_width, bool win, long long score, long long high
             (const char **) lines);
 }
 
-void select_custom(int *result, int term_width, int term_height, int ops[CUSTOM_LINES]) {
+Preset select_custom(int term_width, int term_height, Preset config) {
     const char *lines[CUSTOM_LINES] = {
         "Width: ",
         "Height:",
         "Mines: ",
     };
-    int values[CUSTOM_LINES];
-    for (int i = 0; i < CUSTOM_LINES; i++) {
-        if (ops[i])
-            values[i] = ops[i];
-        else
-            values[i] = CUSTOM_DEFAULTS[i];
-    }
+    int *values[CUSTOM_LINES];
+    if (!config.width)
+        config.width = CUSTOM_DEFAULTS.width;
+
+    if (!config.height)
+        config.height = CUSTOM_DEFAULTS.height;
+
+    if (!config.mines)
+        config.mines = CUSTOM_DEFAULTS.mines;
+    values[0] = &config.width;
+    values[1] = &config.height;
+    values[2] = &config.mines;
+
     int width = 0;
     for (int i = 0; i < CUSTOM_LINES; i++) {
         if ((int) strlen(lines[i]) > width)
@@ -154,25 +161,25 @@ void select_custom(int *result, int term_width, int term_height, int ops[CUSTOM_
             for (int j = 0; j < CUSTOM_LINES; j++) {
                 if (j == opt)
                     wattron(window, A_REVERSE);
-                mvwprintw(window, j + 1, 1, "%s%03d", lines[j], values[j]);
+                mvwprintw(window, j + 1, 1, "%s%03d", lines[j], *values[j]);
                 wattroff(window, A_REVERSE);
             }
             wrefresh(window);
             ch = wgetch(window);
             if (ch >= '0' && ch <= '9') {
-                if (values[i] > CUSTOM_MAX_VALUE / 10)
+                if (*values[i] > CUSTOM_MAX_VALUE / 10)
                     continue;
-                values[i] *= 10;
-                values[i] += ch - '0';
+                *values[i] *= 10;
+                *values[i] += ch - '0';
             }
             else if (ch == KEY_BACKSPACE) {
-                values[i] /= 10;
+                *values[i] /= 10;
             }
         }
-        result[i] = values[i];
         opt++;
     }
     delwin(window);
     curs_set(cv);
     refresh();
+    return config;
 }

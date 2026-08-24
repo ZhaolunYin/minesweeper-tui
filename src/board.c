@@ -1,4 +1,4 @@
-#include "board.h"
+#include "ms.h"
 
 int width_to_board_width(int width) {
     // Each cell is 2x1
