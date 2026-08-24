@@ -113,8 +113,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
                 argp_error(state, "--import and --export cannot be used together");
             if (arguments->import_filename &&
                     (arguments->height || arguments->width || arguments->mines ||
-                     arguments->difficulty || arguments->no_guess || arguments->seed))
-                argp_error(state, "--import cannot be used with any board options or --seed");
+                     arguments->difficulty || arguments->no_guess))
+                argp_error(state, "--import cannot be used with any board options");
     }
     return 0;
 }

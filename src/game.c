@@ -181,7 +181,7 @@ bool end_game(Game *game) {
     else {
         bool first = true;
         do {
-            play_again = select_play_again(game->max_x, game->win, game->score, game->highscore, first);
+            play_again = select_play_again(game->max_x, game->win, game->score, game->highscore, first && !game->args->import_filename);
             if (play_again == 2) {
                 char filename[BUFSIZ];
                 select_filename(game->max_x, filename, BUFSIZ);
