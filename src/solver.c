@@ -86,6 +86,7 @@ static Neighbours _get_unshared_covered(Neighbours *a, Neighbours *b) {
 }
 
 static bool _b1_pattern(Square *grid, int width, int height, int x, int y) {
+    bool changed = false;
     Neighbours n = _get_neighbours(grid, width, height, x, y);
     int covered = _count_covered(&n);
     int flagged = _count_flags(&n);
@@ -93,27 +94,30 @@ static bool _b1_pattern(Square *grid, int width, int height, int x, int y) {
 
     if (covered == mines_needed && mines_needed) {
         for (int i = 0; i < n.n; i++) {
-            if (!n.square[i]->uncovered && !n.square[i]->flag)
+            if (!n.square[i]->uncovered && !n.square[i]->flag) {
                 n.square[i]->flag = true;
+                changed = true;
+            }
         }
-        return true;
     }
-    return false;
+    return changed;
 }
 
 static bool _b2_pattern(Square *grid, int width, int height, int x, int y) {
+    bool changed = false;
     Neighbours n = _get_neighbours(grid, width, height, x, y);
     int flagged = _count_flags(&n);
     int mines_needed = get_square(grid, width, height, x, y)->surrounding - flagged;
 
     if (!mines_needed) {
         for (int i = 0; i < n.n; i++) {
-            if (!n.square[i]->uncovered && !n.square[i]->flag)
+            if (!n.square[i]->uncovered && !n.square[i]->flag) {
                 select_square(&grid, width, height, n.x[i], n.y[i]);
+                changed = true;
+            }
         }
-        return true;
     }
-    return false;
+    return changed;
 }
 
 static bool _1_1_pattern(Square *grid, int width, int height, int x1, int y1, int x2, int y2) {

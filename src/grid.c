@@ -125,7 +125,7 @@ Square *create_grid(int width, int height, int mines, int x, int y, int safe_zon
         }
         init_grid(grid, width, height, mines, mine_positions);
         free(mine_positions);
-        if (solve_board(grid, width, height, x, y) || !no_guess) {
+        if (!no_guess || solve_board(grid, width, height, x, y)) {
             break;
         }
     }

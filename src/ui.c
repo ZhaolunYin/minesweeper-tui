@@ -6,7 +6,6 @@
 #include <ncurses.h>
 
 #include "ms.h"
-#include "ms/board.h"
 
 static int _select_menu(int x, int y, int width, int height, int n_lines, int n_options, const char **lines) {
     WINDOW *window = newwin(height, width, y, x);
@@ -43,7 +42,7 @@ static int _select_menu(int x, int y, int width, int height, int n_lines, int n_
                     int relative_y = event.y - y;
                     if (event.bstate & BUTTON1_PRESSED) {
                         if (relative_x > 0 && relative_x < width - 1 && relative_y > 0 && relative_y < height - 1) {
-                            opt = (relative_y - 1) - n_options + n_lines;
+                            opt = (relative_y - 1) - n_lines + n_options;
                             ch = KEY_ENTER;
                         }
                     }
