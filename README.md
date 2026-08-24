@@ -91,7 +91,7 @@ Boards are loaded and saved using plain text ascii files as such:
 
 | Symbol | Meaning |
 | ------ | ------- |
-| '.' | Empty cell |
-| '*' | Mine |
-| 'X' | First click (optional) |
+| . | Empty cell |
+| * | Mine |
+| X | First click (optional) |
 
