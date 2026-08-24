@@ -11,7 +11,8 @@ struct arguments {
     int mines;
     char *difficulty;
     bool no_guess;
-    char *filename;
+    char *import_filename;
+    char *export_filename;
 
     int seed;
     bool save_highscore;
@@ -19,5 +20,5 @@ struct arguments {
     bool color;
 };
 
-struct arguments default_args();
+struct arguments default_args(void);
 extern struct argp argp;

@@ -10,9 +10,11 @@ A TUI Minesweeper game written in C.
 
 ## Features
 - Ascii text interface with mouse support
-- No guess game modes
+- No guess game modes - completely logic based
 - Custom board size
 - Chording
+- Command line flags
+- Saving and loading boards from files
 
 ## Installation
 ### Nix
@@ -72,4 +74,24 @@ make run
 | Expert | 30x16 | 99 |
 | Expert - No guess | 30x16 | 99 |
 | Custom | 4x4 - screen size | > 0 |
+
+## Loading & Saving boards
+Boards are loaded and saved using plain text ascii files as such:
+```txt
+. . . . . * . . .
+. . . . . . . . .
+. . . . . . * . .
+* . . . . . . * .
+. . . . X . . * .
+. . . . . . . . .
+* . . . . . . * .
+. . . . . . * . *
+. . * . . . . . .
+```
+
+| Symbol | Meaning |
+| ------ | ------- |
+| '.' | Empty cell |
+| '*' | Mine |
+| 'X' | First click (optional) |
 

@@ -1,9 +1,12 @@
+#include "ms/ui.h"
 #include <ctype.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 #include <ncurses.h>
 
 #include "ms.h"
+#include "ms/board.h"
 
 static int _select_menu(int x, int y, int width, int height, int n_lines, int n_options, const char **lines) {
     WINDOW *window = newwin(height, width, y, x);
@@ -48,6 +51,8 @@ static int _select_menu(int x, int y, int width, int height, int n_lines, int n_
                 break;
         }
     }
+    wclear(window);
+    wrefresh(window);
     delwin(window);
     curs_set(cv);
     refresh();
@@ -86,7 +91,7 @@ int select_difficulty(int term_width, int term_height, char *difficulty, bool no
             DIFFICULTIES);
 }
 
-bool select_play_again(int term_width, bool win, long long score, long long highscore) {
+int select_play_again(int term_width, bool win, long long score, long long highscore, bool show_export) {
     char *ops[PLAY_AGAIN_OPS] = {
         "You lose!",
         "You win!",
@@ -100,6 +105,7 @@ bool select_play_again(int term_width, bool win, long long score, long long high
         "Play again?",
         "Yes",
         "No",
+        "Export board",
     };
     if (win && score)
         snprintf(score_text, sizeof(score_text), "Score: %lld.%3.llds", score / 1000, score % 1000);
@@ -115,14 +121,19 @@ bool select_play_again(int term_width, bool win, long long score, long long high
             width = strlen(lines[i]);
     }
     width += 2;
-    return (bool) !_select_menu(
+    int nlines = PLAY_AGAIN_LINES - !show_export;
+    int nops = PLAY_AGAIN_OPS - !show_export;
+    int result = _select_menu(
             (term_width - width) / 2,
             1,
             width,
-            PLAY_AGAIN_LINES + 2,
-            PLAY_AGAIN_LINES,
-            PLAY_AGAIN_OPS,
+            nlines + 2,
+            nlines,
+            nops,
             (const char **) lines);
+    if (result == 0 || result == 1)
+        result = !result;
+    return result;
 }
 
 Preset select_custom(int term_width, int term_height, Preset config) {
@@ -178,8 +189,48 @@ Preset select_custom(int term_width, int term_height, Preset config) {
         }
         opt++;
     }
+    wclear(window);
+    wrefresh(window);
     delwin(window);
     curs_set(cv);
     refresh();
     return config;
+}
+
+void select_filename(int term_width, char *filename, size_t len) {
+    if (!filename)
+        return;
+    WINDOW *window = newwin(FILENAME_LINES + 2, term_width, 0, 0);
+    keypad(window, true);
+    box(window, 0, 0);
+    mvwprintw(window, BOX_WIDTH / 2, BOX_WIDTH / 2, "Select File");
+    int ch;
+    size_t index = 0;
+    for (char *p = filename; p < filename + len; p++) {
+        *p = '\0';
+    }
+    while ((ch = wgetch(window)) != KEY_ENTER && ch != '\n' && ch != '\r') {
+        if (ch == KEY_BACKSPACE) {
+            if (index > 0)
+                filename[--index] = '\0';
+        }
+        else if (ch == 27) {
+            for (char *p = filename; p < filename + len; p++) {
+                *p = '\0';
+            }
+            index = 0;
+            break;
+        }
+        else if (ch >= ' ' && ch <= '~'){
+            if (index < (size_t) term_width - 2 && index < len - 1)
+                filename[index++] = ch;
+        }
+        wclear(window);
+        mvwprintw(window, BOX_WIDTH / 2, BOX_WIDTH / 2, "Select File");
+        mvwprintw(window, BOX_WIDTH / 2 + 1, BOX_WIDTH / 2, "%s", filename);
+        box(window, 0, 0);
+    }
+    wclear(window);
+    wrefresh(window);
+    delwin(window);
 }

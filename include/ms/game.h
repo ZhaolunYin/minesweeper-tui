@@ -20,6 +20,8 @@ typedef struct {
 
     int cursor_x;
     int cursor_y;
+    int start_x;
+    int start_y;
 
     int max_x;
     int max_y;
@@ -28,7 +30,6 @@ typedef struct {
     struct arguments* args;
 } Game;
 
-void show_highscores();
 Game *init_game(struct arguments *args);
 void game_loop(Game *game);
 bool end_game(Game *game);

@@ -1,3 +1,4 @@
+#include <argp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,14 +12,15 @@ const char *argp_program_version =
     "License: MIT";
 const char *argp_program_bug_address = "https://github.com/ZhaolunYin/minesweeper-tui/issues";
 
-struct arguments default_args() {
+struct arguments default_args(void) {
     struct arguments args;
     args.width = 0;
     args.height = 0;
     args.mines = 0;
     args.difficulty = NULL;
     args.no_guess = false;
-    args.filename = NULL;
+    args.import_filename = NULL;
+    args.export_filename = NULL;
 
     args.seed = time(NULL);
     args.save_highscore = true;
@@ -32,17 +34,20 @@ static struct argp_option options[] = {
     { "width",      'w', "WIDTH",       0, "Width of board.", 1 },
     { "height",     'h', "HEIGHT",      0, "Height of board.", 1 },
     { "mines",      'm', "MINES",       0, "Number of mines in grid.", 1 },
-    { "difficulty", 'd', "LEVEL",       0, "Difficulty of board.", 1},
-    { "no-guess",   'n', 0,        0, "Generate a board that does not require guessing.", 1 },
-    { "file",       'f', "FILE",             0, "Import board from file.", 1 },
 
-    { "\nGame options", 0, 0, OPTION_DOC, 0, 2 },
-    { "seed",       's', "SEED",              0, "Seed for randomly generated board.", 3 },
-    { "highscores", 'H', 0,             0, "Show highscores.", 3 },
-    { "no-save",    NO_SAVE, 0,         0, "Do not save highscores.", 3 },
+    { "difficulty", 'd', "LEVEL",       0, "Difficulty of board.", 2 },
+    { "no-guess",   'n', 0,             0, "Generate a board that does not require guessing.", 2 },
 
-    { "\nColor options", 0, 0, OPTION_DOC, 0, 4 },
-    { "no-color",   NO_COLOR, 0,        0, "Do not use color.", 5 },
+    { "import",     'i', "FILE",        0, "Import board from file.", 3 },
+    { "export",     'e', "FILE",        0, "Export board to file.", 3 },
+
+    { "\nGame options", 0, 0, OPTION_DOC, 0, 4 },
+    { "seed",       's', "SEED",        0, "Seed for randomly generated board.", 5 },
+    { "highscores", 'H', 0,             0, "Show highscores.", 5 },
+    { "no-save",    NO_SAVE, 0,         0, "Do not save highscores.", 5 },
+
+    { "\nColor options", 0, 0, OPTION_DOC, 0, 6 },
+    { "no-color",   NO_COLOR, 0,        0, "Do not use color.", 7 },
 
     { 0 },
 };
@@ -81,8 +86,11 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
         case 'n':
             arguments->no_guess = true;
             break;
-        case 'f':
-            arguments->filename = arg;
+        case 'i':
+            arguments->import_filename = arg;
+            break;
+        case 'e':
+            arguments->export_filename = arg;
             break;
         case 's':
             arguments->seed = atoi(arg);
@@ -101,6 +109,12 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
                 argp_error(state, "--width, --height and --mines cannot be used with --difficulty");
             if (arguments->no_guess && !arguments->difficulty)
                 argp_error(state, "--no-guess must be used with --difficulty");
+            if (arguments->import_filename && arguments->export_filename)
+                argp_error(state, "--import and --export cannot be used together");
+            if (arguments->import_filename &&
+                    (arguments->height || arguments->width || arguments->mines ||
+                     arguments->difficulty || arguments->no_guess || arguments->seed))
+                argp_error(state, "--import cannot be used with any board options or --seed");
     }
     return 0;
 }

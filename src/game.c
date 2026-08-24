@@ -1,7 +1,9 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 
 #include "ms.h"
+#include "ms/arguments.h"
 
 #define SAFE_ZONE 1
 #define MIN_MINES 1
@@ -36,8 +38,8 @@ Game *init_game(struct arguments *args) {
     game->grid = NULL;
     game->args = args;
 
-    if (args->filename) {
-        game->grid = import_grid(args->filename, &game->width, &game->height, &game->mines);
+    if (args->import_filename) {
+        game->grid = import_grid(args->import_filename, &game->width, &game->height, &game->mines);
         if (!game->grid) {
             free(game);
             return NULL;
@@ -108,6 +110,8 @@ Game *init_game(struct arguments *args) {
     int board_width = width_to_board_width(game->width);
     game->cursor_x = game->width / 2;
     game->cursor_y = game->height / 2;
+    game->start_x = 0;
+    game->start_y = 0;
     game->flags = 0;
     game->win = false;
     game->score = 0;
@@ -129,8 +133,11 @@ void game_loop(Game *game) {
 
     if (!game->grid) {
         do {
-            if (move_cursor(game->board, NULL, game->width, game->height, &game->cursor_x, &game->cursor_y, NULL, game->mines))
+            if (move_cursor(game->board, NULL, game->width, game->height, &game->cursor_x, &game->cursor_y, NULL, game->mines)) {
+                game->start_x = game->cursor_x;
+                game->start_y = game->cursor_y;
                 game->grid = create_grid(game->width, game->height, game->mines, game->cursor_x, game->cursor_y, SAFE_ZONE, game->no_guess);
+            }
         } while (!game->grid);
     }
 
@@ -166,7 +173,23 @@ bool end_game(Game *game) {
         game->highscore = game->score;
         write_highscore(game->highscore, game->difficulty);
     }
-    bool play_again = select_play_again(game->max_x, game->win, game->score, game->highscore);
+    int play_again;
+    if (game->args->export_filename) {
+        export_grid(game->grid, game->width, game->height, game->start_x, game->start_y, game->args->export_filename);
+        play_again = false;
+    }
+    else {
+        bool first = true;
+        do {
+            play_again = select_play_again(game->max_x, game->win, game->score, game->highscore, first);
+            if (play_again == 2) {
+                char filename[BUFSIZ];
+                select_filename(game->max_x, filename, BUFSIZ);
+                export_grid(game->grid, game->width, game->height, game->start_x, game->start_y, filename);
+            }
+            first = false;
+        } while (play_again == 2);
+    }
     delwin(game->board);
     free(game->grid);
     clear();
