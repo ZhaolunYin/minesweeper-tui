@@ -203,13 +203,17 @@ void select_filename(int term_width, char *filename, size_t len) {
     WINDOW *window = newwin(FILENAME_LINES + 2, term_width, 0, 0);
     keypad(window, true);
     box(window, 0, 0);
-    mvwprintw(window, BOX_WIDTH / 2, BOX_WIDTH / 2, "Select File");
-    int ch;
+    int ch = 0;
     size_t index = 0;
     for (char *p = filename; p < filename + len; p++) {
         *p = '\0';
     }
-    while ((ch = wgetch(window)) != KEY_ENTER && ch != '\n' && ch != '\r') {
+    while (ch != KEY_ENTER && ch != '\n' && ch != '\r') {
+        wclear(window);
+        mvwprintw(window, BOX_WIDTH / 2, BOX_WIDTH / 2, "Select File");
+        mvwprintw(window, BOX_WIDTH / 2 + 1, BOX_WIDTH / 2, "%s", filename);
+        box(window, 0, 0);
+        ch = wgetch(window);
         if (ch == KEY_BACKSPACE) {
             if (index > 0)
                 filename[--index] = '\0';
@@ -225,10 +229,6 @@ void select_filename(int term_width, char *filename, size_t len) {
             if (index < (size_t) term_width - 2 && index < len - 1)
                 filename[index++] = ch;
         }
-        wclear(window);
-        mvwprintw(window, BOX_WIDTH / 2, BOX_WIDTH / 2, "Select File");
-        mvwprintw(window, BOX_WIDTH / 2 + 1, BOX_WIDTH / 2, "%s", filename);
-        box(window, 0, 0);
     }
     wclear(window);
     wrefresh(window);

@@ -8,7 +8,7 @@
 #define DIGITS 3
 
 /// Initialises color pairs
-void init_color_pairs() {
+void init_color_pairs(void) {
     start_color();
     use_default_colors();
 
@@ -88,6 +88,7 @@ void draw_grid(WINDOW *board, Square *grid, int board_width, int board_height, i
 
 /// Reads input and moves cursor. Returns true if enter was pressed or false if not
 bool move_cursor(WINDOW *win, Square *grid, int width, int height, int *cursor_x, int *cursor_y, int *flag_n, int mine_n) {
+    int cv = curs_set(2);
     wmove(win, (*cursor_y) + 2, (*cursor_x) * 2 + 1);
     int ch = wgetch(win);
     MEVENT event;
@@ -165,6 +166,7 @@ bool move_cursor(WINDOW *win, Square *grid, int width, int height, int *cursor_x
     }
     wmove(win, y_to_board_y(*cursor_y), x_to_board_x(*cursor_x));
     wrefresh(win);
+    curs_set(cv);
     return false;
 }
 
