@@ -152,7 +152,7 @@ static void _3bv_flood_fill(Square *grid, int width, int height, int x, int y, b
 int get_3bv(Square *grid, int width, int height) {
     int _3bv = 0;
 
-    bool *visited = calloc(width * height, sizeof(bool));
+    bool *visited = calloc((size_t) width * height, sizeof(bool));
     if (!visited)
         return -1;
     FOR_EACH_IN_GRID(grid, width, height) {
