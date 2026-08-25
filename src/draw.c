@@ -1,3 +1,4 @@
+#include "ms/draw.h"
 #include "ms.h"
 
 #include <stddef.h>
@@ -87,8 +88,7 @@ void draw_grid(WINDOW *board, Square *grid, int board_width, int board_height, i
 }
 
 /// Reads input and moves cursor. Returns true if enter was pressed or false if not
-bool move_cursor(WINDOW *win, Square *grid, int width, int height, int *cursor_x, int *cursor_y, int *flag_n, int mine_n) {
-    int cv = curs_set(2);
+Action move_cursor(WINDOW *win, Square *grid, int width, int height, int *cursor_x, int *cursor_y, int *flag_n, int mine_n) {
     wmove(win, (*cursor_y) + 2, (*cursor_x) * 2 + 1);
     int ch = wgetch(win);
     MEVENT event;
@@ -124,13 +124,14 @@ bool move_cursor(WINDOW *win, Square *grid, int width, int height, int *cursor_x
                         (*flag_n)++;
                     else
                         (*flag_n)--;
+                    return FLAG;
                 }
             }
             break;
         case KEY_ENTER:
         case '\n':
         case '\r':
-            return true;
+            return CLICK;
         case KEY_MOUSE:
             if (getmouse(&event) == OK && wenclose(win, event.y, event.x)) {
                 int startx, starty;
@@ -144,7 +145,7 @@ bool move_cursor(WINDOW *win, Square *grid, int width, int height, int *cursor_x
                 *cursor_x = board_x_to_x(x);
                 *cursor_y = board_y_to_y(y);
                 if (event.bstate & BUTTON1_PRESSED)
-                    return true;
+                    return CLICK;
                 else if (event.bstate & BUTTON3_PRESSED) {
                     if (grid && flag_n) {
                         Square *square = get_square(grid, width, height, *cursor_x, *cursor_y);
@@ -156,6 +157,7 @@ bool move_cursor(WINDOW *win, Square *grid, int width, int height, int *cursor_x
                                 (*flag_n)++;
                             else
                                 (*flag_n)--;
+                            return FLAG;
                         }
                     }
                 }
@@ -166,8 +168,7 @@ bool move_cursor(WINDOW *win, Square *grid, int width, int height, int *cursor_x
     }
     wmove(win, y_to_board_y(*cursor_y), x_to_board_x(*cursor_x));
     wrefresh(win);
-    curs_set(cv);
-    return false;
+    return MOVE;
 }
 
 void draw_stats(WINDOW *board, int mine_total, int flags, int time) {

@@ -1,3 +1,4 @@
+#include "ms/grid.h"
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -134,4 +135,39 @@ Square *create_grid(int width, int height, int mines, int x, int y, int safe_zon
         return NULL;
     }
     return grid;
+}
+
+static void _3bv_flood_fill(Square *grid, int width, int height, int x, int y, bool *visited) {
+    Square *square = get_square(grid, width, height, x, y);
+    if (!square->mine && !visited[y * width + x]) {
+        visited[y * width + x] = true;
+        if (!square->surrounding) {
+            FOR_EACH_NEIGHBOUR(x, y, width, height) {
+                _3bv_flood_fill(grid, width, height, rx, ry, visited);
+            }
+        }
+    }
+}
+
+int get_3bv(Square *grid, int width, int height) {
+    int _3bv = 0;
+
+    bool *visited = calloc(width * height, sizeof(bool));
+    if (!visited)
+        return -1;
+    FOR_EACH_IN_GRID(grid, width, height) {
+        Square *square = get_square(grid, width, height, x, y);
+        if (!square->mine && !square->surrounding && !visited[y * width + x]) {
+            _3bv++;
+            _3bv_flood_fill(grid, width, height, x, y, visited);
+        }
+    }
+    FOR_EACH_IN_GRID(grid, width, height) {
+        Square *square = get_square(grid, width, height, x, y);
+        if (!square->mine && square->surrounding && !visited[y * width + x]) {
+            _3bv++;
+        }
+    }
+    free(visited);
+    return _3bv;
 }

@@ -17,6 +17,7 @@ typedef struct {
 
     long long score;
     long long highscore;
+    int clicks;
 
     int cursor_x;
     int cursor_y;

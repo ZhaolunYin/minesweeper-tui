@@ -90,30 +90,82 @@ int select_difficulty(int term_width, int term_height, char *difficulty, bool no
             DIFFICULTIES);
 }
 
-int select_play_again(int term_width, bool win, long long score, long long highscore, bool show_export) {
+static void _show_stats(Game *game) {
+    char score_text[BUFSIZ];
+    char highscore_text[BUFSIZ];
+    char text_3bv[BUFSIZ];
+    char sec_3bv_text[BUFSIZ];
+    char clicks_text[BUFSIZ];
+    char efficiency_text[BUFSIZ];
+
+    char *text[STATS_N] = {
+        score_text,
+        highscore_text,
+        text_3bv,
+        sec_3bv_text,
+        clicks_text,
+        efficiency_text,
+    };
+
+    // Score
+    if (game->score)
+        snprintf(score_text, sizeof(score_text), "Score: %lld.%3.llds", game->score / 1000, game->score % 1000);
+    else
+        snprintf(score_text, sizeof(score_text), "Score: None");
+
+    // Highscore
+    if (game->highscore)
+        snprintf(highscore_text, sizeof(highscore_text), "Highscore: %lld.%3.llds", game->highscore / 1000, game->highscore % 1000);
+    else
+        snprintf(highscore_text, sizeof(highscore_text), "Highscore: None");
+
+    // 3BV
+    int _3bv = get_3bv(game->grid, game->width, game->height);
+    snprintf(text_3bv, sizeof(text_3bv), "3BV: %d", _3bv);
+
+    // 3BV/s
+    if (game->score)
+        snprintf(sec_3bv_text, sizeof(sec_3bv_text), "3BV/s: %g", (double) _3bv / ((double) game->score / 1000));
+
+    // Clicks
+    snprintf(clicks_text, sizeof(clicks_text), "Clicks: %d", game->clicks);
+
+    // Efficiency
+    if (game->clicks) {
+        double efficiency = ((double) _3bv / game->clicks) * 100;
+        snprintf(efficiency_text, sizeof(efficiency_text), "Efficiency: %g%%", efficiency);
+    }
+
+
+    int width = 0;
+    for (int i = 0; i < STATS_N; i++) {
+        if ((int) strlen(text[i]) > width)
+            width = strlen(text[i]);
+    }
+    width += 2;
+    WINDOW *window = newwin(getmaxy(stdscr), width, 0, 0);
+    box(window, 0, 0);
+    for (int i = 0; i < STATS_N; i++) {
+        mvwprintw(window, i + BOX_WIDTH / 2, BOX_WIDTH / 2, "%s", text[i]);
+    }
+    wrefresh(window);
+    delwin(window);
+}
+
+int select_play_again(int term_width, bool show_export, Game *game) {
     char *ops[PLAY_AGAIN_OPS] = {
         "You lose!",
         "You win!",
     };
-    char score_text[BUFSIZ];
-    char highscore_text[BUFSIZ];
     char *lines[PLAY_AGAIN_LINES] = {
-        ops[(int) win],
-        score_text,
-        highscore_text,
+        ops[(int) game->win],
         "Play again?",
         "Yes",
         "No",
         "Export board",
     };
-    if (win && score)
-        snprintf(score_text, sizeof(score_text), "Score: %lld.%3.llds", score / 1000, score % 1000);
-    else
-        snprintf(score_text, sizeof(score_text), "Score: None");
-    if (highscore)
-        snprintf(highscore_text, sizeof(highscore_text), "Highscore: %lld.%3.llds", highscore / 1000, highscore % 1000);
-    else
-        snprintf(highscore_text, sizeof(highscore_text), "Highscore: None");
+    if (game->win)
+        _show_stats(game);
     int width = 0;
     for (int i = 0; i < PLAY_AGAIN_LINES; i++) {
         if ((int) strlen(lines[i]) > width)

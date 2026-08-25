@@ -25,3 +25,4 @@ int select_square(Square **grid, int width, int height, int x, int y);
 bool all_selected(Square *grid, int width, int height);
 void init_grid(Square *grid, int width, int height, int mines, int *mine_positions);
 Square *create_grid(int width, int height, int mines, int x, int y, int safe_zone, bool no_guess);
+int get_3bv(Square *grid, int width, int height);

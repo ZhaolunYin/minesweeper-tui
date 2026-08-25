@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include "config.h"
+#include "game.h"
 
 #define DIFFICULTY_LINES 8
 #define DIFFICULTY_OPS 7
@@ -17,7 +18,9 @@
 }
 #define CUSTOM_DIFFICULTY (DIFFICULTY_OPS - 1)
 
-#define PLAY_AGAIN_LINES 7
+#define STATS_N 6
+
+#define PLAY_AGAIN_LINES 5
 #define PLAY_AGAIN_OPS 3
 
 #define CUSTOM_LINES 3
@@ -27,6 +30,6 @@
 #define FILENAME_LINES 2
 
 int select_difficulty(int term_width, int term_height, char *difficulty, bool no_guess);
-int select_play_again(int term_width, bool win, long long score, long long highscore, bool show_export);
+int select_play_again(int term_width, bool show_export, Game *game);
 Preset select_custom(int term_width, int term_height, Preset config);
 void select_filename(int term_width, char *filename, size_t len);

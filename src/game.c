@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <time.h>
 
 #include "ms.h"
-#include "ms/arguments.h"
 
 #define SAFE_ZONE 1
 #define MIN_MINES 1
@@ -116,6 +116,7 @@ Game *init_game(struct arguments *args) {
     game->win = false;
     game->score = 0;
     game->highscore = load_highscore(game->difficulty);
+    game->clicks = 0;
 
     game->board = newwin(board_height, board_width, (game->max_y - board_height) / 2, (game->max_x - board_width) / 2);
     keypad(game->board, true);
@@ -133,10 +134,11 @@ void game_loop(Game *game) {
 
     if (!game->grid) {
         do {
-            if (move_cursor(game->board, NULL, game->width, game->height, &game->cursor_x, &game->cursor_y, NULL, game->mines)) {
+            if (move_cursor(game->board, NULL, game->width, game->height, &game->cursor_x, &game->cursor_y, NULL, game->mines) == CLICK) {
                 game->start_x = game->cursor_x;
                 game->start_y = game->cursor_y;
                 game->grid = create_grid(game->width, game->height, game->mines, game->cursor_x, game->cursor_y, SAFE_ZONE, game->no_guess);
+                game->clicks++;
             }
         } while (!game->grid);
     }
@@ -154,8 +156,16 @@ void game_loop(Game *game) {
             draw_grid(game->board, game->grid, width_to_board_width(game->width), height_to_board_height(game->height), game->difficulty, false);
             draw_stats(game->board, game->mines, game->flags, game->score / 1000);
             wrefresh(game->board);
-            if (move_cursor(game->board, game->grid, game->width, game->height, &game->cursor_x, &game->cursor_y, &game->flags, game->mines)) {
-                selected = select_square(&game->grid, game->width, game->height, game->cursor_x, game->cursor_y);
+            switch (move_cursor(game->board, game->grid, game->width, game->height, &game->cursor_x, &game->cursor_y, &game->flags, game->mines)) {
+                case CLICK:
+                    selected = select_square(&game->grid, game->width, game->height, game->cursor_x, game->cursor_y);
+                    game->clicks++;
+                    break;
+                case FLAG:
+                    game->clicks++;
+                    break;
+                default:
+                    break;
             }
             struct timespec now;
             clock_gettime(CLOCK_MONOTONIC, &now);
@@ -181,7 +191,7 @@ bool end_game(Game *game) {
     else {
         bool first = true;
         do {
-            play_again = select_play_again(game->max_x, game->win, game->score, game->highscore, first && !game->args->import_filename);
+            play_again = select_play_again(game->max_x, first && !game->args->import_filename, game);
             if (play_again == 2) {
                 char filename[BUFSIZ];
                 select_filename(game->max_x, filename, BUFSIZ);

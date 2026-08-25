@@ -15,9 +15,10 @@ int main(int argc, char **argv) {
     mousemask(BUTTON1_PRESSED | BUTTON3_PRESSED, NULL);
     cbreak();
     noecho();
+
+    srand(args.seed);
     bool play_again = true;
     while (play_again) {
-        srand(args.seed);
         Game *game = init_game(&args);
         if (!game) {
             endwin();
