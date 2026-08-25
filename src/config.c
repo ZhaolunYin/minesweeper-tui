@@ -20,8 +20,8 @@ const Preset EXPERT = {
 
 const Preset CUSTOM_DEFAULTS = {
     .width = 30,
-    .height = 16,
-    .mines = 99,
+    .height = 30,
+    .mines = 160,
 };
 
 void load_preset(const Preset preset, int *width, int *height, int *mines) {

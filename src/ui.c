@@ -176,7 +176,7 @@ int select_play_again(int term_width, bool show_export, Game *game) {
     int nops = PLAY_AGAIN_OPS - !show_export;
     int result = _select_menu(
             (term_width - width) / 2,
-            1,
+            0,
             width,
             nlines + 2,
             nlines,
