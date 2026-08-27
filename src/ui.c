@@ -4,9 +4,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <ncurses.h>
+#include <time.h>
 
 #include "ms.h"
+#include "ms/highscore.h"
 
+/// Displays a boxed, navigable menu and returns the selected option index.
 static int _select_menu(int x, int y, int width, int height, int n_lines, int n_options, const char **lines) {
     WINDOW *window = newwin(height, width, y, x);
     keypad(window, true);
@@ -58,7 +61,9 @@ static int _select_menu(int x, int y, int width, int height, int n_lines, int n_
     return opt;
 }
 
+/// Resolves a difficulty name to a preset index, or opens the menu if none matches.
 int select_difficulty(int term_width, int term_height, char *difficulty, bool no_guess) {
+    LOG(LOG_INFO, "Selecting difficulty");
     if (difficulty) {
         for (char *p = difficulty; *p; p++) {
             *p = tolower(*p);
@@ -69,8 +74,10 @@ int select_difficulty(int term_width, int term_height, char *difficulty, bool no
             for (char *p = level; *p; p++) {
                 *p = tolower(*p);
             }
-            if (strcmp(difficulty, level) == 0 && i != CUSTOM_DIFFICULTY + DIFFICULTY_OPS - DIFFICULTY_LINES)
+            if (strcmp(difficulty, level) == 0 && i != CUSTOM_DIFFICULTY + DIFFICULTY_OPS - DIFFICULTY_LINES) {
+                LOG(LOG_INFO, "Using difficulty provided by command line argument");
                 return (i + no_guess);
+            }
         }
     }
 
@@ -90,69 +97,120 @@ int select_difficulty(int term_width, int term_height, char *difficulty, bool no
             DIFFICULTIES);
 }
 
+/// Renders and saves end-of-game and personal-best statistics in a popup window.
 static void _show_stats(Game *game) {
-    char score_text[BUFSIZ];
-    char highscore_text[BUFSIZ];
-    char text_3bv[BUFSIZ];
-    char sec_3bv_text[BUFSIZ];
-    char clicks_text[BUFSIZ];
-    char efficiency_text[BUFSIZ];
+    LOG(LOG_INFO, "Showing game stats");
+    char time_text[BUFSIZ];
+    char time_text_pb[BUFSIZ];
 
-    char *text[STATS_N] = {
-        score_text,
-        highscore_text,
-        text_3bv,
-        sec_3bv_text,
+    char bbbv_text[BUFSIZ];
+
+    char bbbv_s_text[BUFSIZ];
+    char bbbv_s_text_pb[BUFSIZ];
+
+    char clicks_text[BUFSIZ];
+    char clicks_text_pb[BUFSIZ];
+
+    char efficiency_text[BUFSIZ];
+    char efficiency_text_pb[BUFSIZ];
+
+    char *text[] = {
+        "Game Stats",
+        time_text,
+        bbbv_text,
+        bbbv_s_text,
         clicks_text,
         efficiency_text,
+        "",
+        "All Time",
+        time_text_pb,
+        bbbv_s_text_pb,
+        clicks_text_pb,
+        efficiency_text_pb,
+        NULL
     };
 
-    // Score
-    if (game->score)
-        snprintf(score_text, sizeof(score_text), "Score: %lld.%3.llds", game->score / 1000, game->score % 1000);
+    // Time
+    if (game->time)
+        snprintf(time_text, sizeof(time_text), "Time: %lld.%3.llds", game->time / 1000, game->time % 1000);
     else
-        snprintf(score_text, sizeof(score_text), "Score: None");
-
-    // Highscore
-    if (game->highscore)
-        snprintf(highscore_text, sizeof(highscore_text), "Highscore: %lld.%3.llds", game->highscore / 1000, game->highscore % 1000);
-    else
-        snprintf(highscore_text, sizeof(highscore_text), "Highscore: None");
+        snprintf(time_text, sizeof(time_text), "Time: None");
 
     // 3BV
-    int _3bv = get_3bv(game->grid, game->width, game->height);
-    snprintf(text_3bv, sizeof(text_3bv), "3BV: %d", _3bv);
+    int bbbv = get_bbbv(game->grid, game->width, game->height);
+    snprintf(bbbv_text, sizeof(bbbv_text), "3BV: %d", bbbv);
 
     // 3BV/s
-    if (game->score)
-        snprintf(sec_3bv_text, sizeof(sec_3bv_text), "3BV/s: %g", (double) _3bv / ((double) game->score / 1000));
+    double bbbv_s = 0;
+    if (game->time)
+        bbbv_s = (double) bbbv / ((double) game->time / 1000);
+    snprintf(bbbv_s_text, sizeof(bbbv_s_text), "3BV/s: %g", bbbv_s);
 
     // Clicks
     snprintf(clicks_text, sizeof(clicks_text), "Clicks: %d", game->clicks);
 
     // Efficiency
+    double efficiency = 0;
     if (game->clicks) {
-        double efficiency = ((double) _3bv / game->clicks) * 100;
-        snprintf(efficiency_text, sizeof(efficiency_text), "Efficiency: %g%%", efficiency);
+        efficiency = ((double) bbbv / game->clicks);
+        snprintf(efficiency_text, sizeof(efficiency_text), "Efficiency: %g%%", efficiency * 100);
     }
+    Scores scores = (Scores) {
+        .time = game->time,
+        .bbbv_s = bbbv_s,
+        .clicks = game->clicks,
+        .efficiency = efficiency,
+    };
+    Scores highscores = load_highscore(game->difficulty);
+    if (scores.time == highscores.time)
+        strncat(time_text, " (PB)", sizeof(time_text) - strlen(time_text) - 1);
 
+    if (scores.bbbv_s == highscores.bbbv_s)
+        strncat(bbbv_s_text, " (PB)", sizeof(bbbv_s_text) - strlen(bbbv_s_text) - 1);
+
+    if (scores.clicks == highscores.clicks)
+        strncat(clicks_text, " (PB)", sizeof(clicks_text) - strlen(clicks_text) - 1);
+
+    if (scores.efficiency == highscores.efficiency)
+        strncat(efficiency_text, " (PB)", sizeof(efficiency_text) - strlen(efficiency_text) - 1);
+
+    write_highscore(&scores, game->difficulty);
+    highscores = load_highscore(game->difficulty);
+
+    // Time
+    if (highscores.clicks)
+        snprintf(time_text_pb, sizeof(time_text_pb), "Time: %lld.%3.llds", highscores.time / 1000, highscores.time % 1000);
+    else
+        snprintf(time_text_pb, sizeof(time_text_pb), "Time: None");
+    // 3BV/s
+    snprintf(bbbv_s_text_pb, sizeof(bbbv_s_text_pb), "3BV/s: %g", highscores.bbbv_s);
+    // Clicks
+    if (highscores.clicks)
+        snprintf(clicks_text_pb, sizeof(clicks_text_pb), "Clicks: %d", highscores.clicks);
+    else
+        snprintf(clicks_text_pb, sizeof(clicks_text_pb), "Clicks: None");
+    // Efficiency
+    snprintf(efficiency_text_pb, sizeof(efficiency_text_pb), "Efficiency: %g%%", highscores.efficiency * 100);
 
     int width = 0;
-    for (int i = 0; i < STATS_N; i++) {
+    for (int i = 0; text[i]; i++) {
         if ((int) strlen(text[i]) > width)
             width = strlen(text[i]);
     }
     width += 2;
     WINDOW *window = newwin(getmaxy(stdscr), width, 0, 0);
     box(window, 0, 0);
-    for (int i = 0; i < STATS_N; i++) {
+
+    for (int i = 0; text[i]; i++) {
         mvwprintw(window, i + BOX_WIDTH / 2, BOX_WIDTH / 2, "%s", text[i]);
     }
     wrefresh(window);
     delwin(window);
 }
 
+/// Presents the win/lose result and play-again or export options.
 int select_play_again(int term_width, bool show_export, Game *game) {
+    LOG(LOG_INFO, "Selecting play again option");
     char *ops[PLAY_AGAIN_OPS] = {
         "You lose!",
         "You win!",
@@ -187,7 +245,9 @@ int select_play_again(int term_width, bool show_export, Game *game) {
     return result;
 }
 
+/// Lets the user set custom width, height and mines via the keyboard.
 Preset select_custom(int term_width, int term_height, Preset config) {
+    LOG(LOG_INFO, "Selecting custom grid dimensions");
     const char *lines[CUSTOM_LINES] = {
         "Width: ",
         "Height:",
@@ -202,6 +262,7 @@ Preset select_custom(int term_width, int term_height, Preset config) {
 
     if (!config.mines)
         config.mines = CUSTOM_DEFAULTS.mines;
+
     values[0] = &config.width;
     values[1] = &config.height;
     values[2] = &config.mines;
@@ -215,13 +276,12 @@ Preset select_custom(int term_width, int term_height, Preset config) {
     WINDOW *window = newwin(CUSTOM_LINES + 2, width, (term_height - (CUSTOM_LINES + 2)) / 2, (term_width - width) / 2);
     keypad(window, true);
     int cv = curs_set(0);
-    int opt = 0;
     for (int i = 0; i < CUSTOM_LINES; i++) {
         int ch = 0;
         box(window, 0, 0);
         while (ch != KEY_ENTER && ch != '\n' && ch != '\r') {
             for (int j = 0; j < CUSTOM_LINES; j++) {
-                if (j == opt)
+                if (j == i)
                     wattron(window, A_REVERSE);
                 mvwprintw(window, j + 1, 1, "%s%03d", lines[j], *values[j]);
                 wattroff(window, A_REVERSE);
@@ -238,7 +298,6 @@ Preset select_custom(int term_width, int term_height, Preset config) {
                 *values[i] /= 10;
             }
         }
-        opt++;
     }
     wclear(window);
     wrefresh(window);
@@ -248,9 +307,13 @@ Preset select_custom(int term_width, int term_height, Preset config) {
     return config;
 }
 
+/// Prompts the user to type a filename for export.
 void select_filename(int term_width, char *filename, size_t len) {
-    if (!filename)
+    LOG(LOG_INFO, "Selecting filename");
+    if (!filename) {
+        LOG(LOG_ERROR, "Invalid filename buffer");
         return;
+    }
     WINDOW *window = newwin(FILENAME_LINES + 2, term_width, 0, 0);
     keypad(window, true);
     box(window, 0, 0);

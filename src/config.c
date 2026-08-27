@@ -1,4 +1,5 @@
 #include "ms.h"
+#include "ms/log.h"
 
 const Preset BEGINNER = {
     .width = 9,
@@ -24,8 +25,10 @@ const Preset CUSTOM_DEFAULTS = {
     .mines = 160,
 };
 
+/// Copies a preset's width, height and mines into the provided pointers.
 void load_preset(const Preset preset, int *width, int *height, int *mines) {
     *width = preset.width;
     *height = preset.height;
     *mines = preset.mines;
+    LOG(LOG_DEBUG, "Loaded preset: Width: %d Height: %d Mines: %d", *width, *height, *mines);
 }

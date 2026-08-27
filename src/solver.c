@@ -4,6 +4,7 @@
 
 #include "ms.h"
 
+/// Returns the eight neighbouring squares (skipping out-of-bounds) around (x, y).
 static Neighbours _get_neighbours(Square *grid, int width, int height, int x, int y) {
     Neighbours neighbours;
     neighbours.n = 0;
@@ -16,6 +17,7 @@ static Neighbours _get_neighbours(Square *grid, int width, int height, int x, in
     return neighbours;
 }
 
+/// Counts how many neighbours are flagged.
 static int _count_flags(Neighbours *n) {
     int c = 0;
     for (int i = 0; i < n->n; i++)
@@ -23,6 +25,7 @@ static int _count_flags(Neighbours *n) {
     return c;
 }
 
+/// Counts how many neighbours are neither uncovered nor flagged.
 static int _count_covered(Neighbours *n) {
     int c = 0;
     for (int i = 0; i < n->n; i++) {
@@ -32,6 +35,7 @@ static int _count_covered(Neighbours *n) {
     return c;
 }
 
+/// Counts covered squares shared between two neighbour sets.
 static int _count_shared_covered(Neighbours *a, Neighbours *b) {
     int c = 0;
     for (int i = 0; i < a->n; i++) {
@@ -46,6 +50,7 @@ static int _count_shared_covered(Neighbours *a, Neighbours *b) {
     return c;
 }
 
+/// Counts covered squares in `a` that do not appear in `b`.
 static int _count_unshared_covered(Neighbours *a, Neighbours *b) {
     int c = 0;
     for (int i = 0; i < a->n; i++) {
@@ -63,6 +68,7 @@ static int _count_unshared_covered(Neighbours *a, Neighbours *b) {
     return c;
 }
 
+/// Builds a neighbour list of `a`'s covered squares not present in `b`.
 static Neighbours _get_unshared_covered(Neighbours *a, Neighbours *b) {
     Neighbours n;
     n.n = 0;
@@ -85,6 +91,7 @@ static Neighbours _get_unshared_covered(Neighbours *a, Neighbours *b) {
     return n;
 }
 
+/// Applies the basic 1-pattern: flags all covered squares if flagged neighbours match the number.
 static bool _b1_pattern(Square *grid, int width, int height, int x, int y) {
     bool changed = false;
     Neighbours n = _get_neighbours(grid, width, height, x, y);
@@ -103,6 +110,7 @@ static bool _b1_pattern(Square *grid, int width, int height, int x, int y) {
     return changed;
 }
 
+/// Applies the basic 2-pattern: uncovers squares when neighbouring flags exceed the number.
 static bool _b2_pattern(Square *grid, int width, int height, int x, int y) {
     bool changed = false;
     Neighbours n = _get_neighbours(grid, width, height, x, y);
@@ -120,6 +128,7 @@ static bool _b2_pattern(Square *grid, int width, int height, int x, int y) {
     return changed;
 }
 
+/// Applies the 1-1 pattern between two adjacent numbered squares.
 static bool _1_1_pattern(Square *grid, int width, int height, int x1, int y1, int x2, int y2) {
     bool changed = false;
     Neighbours a = _get_neighbours(grid, width, height, x1, y1);
@@ -149,6 +158,7 @@ static bool _1_1_pattern(Square *grid, int width, int height, int x1, int y1, in
     return changed;
 }
 
+/// Applies the 1-2 pattern between two adjacent numbered squares.
 static bool _1_2_pattern(Square *grid, int width, int height, int x1, int y1, int x2, int y2) {
     bool changed = false;
     Neighbours a = _get_neighbours(grid, width, height, x1, y1);
@@ -186,6 +196,7 @@ static bool _1_2_pattern(Square *grid, int width, int height, int x1, int y1, in
     return changed;
 }
 
+/// Returns true if the square has already been visited.
 static bool _square_visited(Square **visited, int len, Square *square) {
     for (int i = 0; i < len; i++) {
         if (visited[i] == square) {
@@ -195,6 +206,7 @@ static bool _square_visited(Square **visited, int len, Square *square) {
     return false;
 }
 
+/// Applies the basic 1 and 2 patterns across the grid, returning true if anything changed.
 static bool _apply_basic_logic(Square *grid, int width, int height) {
     bool changed = false;
     FOR_EACH_IN_GRID(grid, width, height) {
@@ -212,9 +224,14 @@ static bool _apply_basic_logic(Square *grid, int width, int height) {
 }
 
 
+/// Applies the advanced 1-1 and 1-2 patterns across the grid, returning true if anything changed.
 static bool _apply_advanced_logic(Square *grid, int width, int height) {
     bool changed = false;
     Square **visited = calloc((size_t) width * height, sizeof(Square *));
+    if (!visited) {
+        LOG(LOG_ERROR, "Failed to initialise list of visited squares");
+        return false;
+    }
     int index = 0;
     FOR_EACH_IN_GRID(grid, width, height) {
         Square *sq1 = get_square(grid, width, height, x, y);
@@ -235,10 +252,13 @@ static bool _apply_advanced_logic(Square *grid, int width, int height) {
     return changed;
 }
 
+/// Returns true if the grid can be fully solved using logic alone (no guessing).
 bool solve_board(Square *grid, int width, int height, int x, int y) {
     Square *copy = malloc((size_t) width * height * sizeof(Square));
-    if (!copy)
+    if (!copy) {
+        LOG(LOG_ERROR, "Failed to make copy of grid");
         return false;
+    }
     memcpy(copy, grid, (size_t) width * height * sizeof(Square));
     select_square(&copy, width, height, x, y);
     bool changed = true;

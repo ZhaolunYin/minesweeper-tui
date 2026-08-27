@@ -6,7 +6,7 @@
 #include "grid.h"
 
 typedef enum {
-    CLICK, FLAG, MOVE
+    CLICK, FLAG, MOVE, NONE
 } Action;
 
 void init_color_pairs(void);

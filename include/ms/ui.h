@@ -18,8 +18,6 @@
 }
 #define CUSTOM_DIFFICULTY (DIFFICULTY_OPS - 1)
 
-#define STATS_N 6
-
 #define PLAY_AGAIN_LINES 5
 #define PLAY_AGAIN_OPS 3
 

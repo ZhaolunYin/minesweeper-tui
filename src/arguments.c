@@ -12,6 +12,7 @@ const char *argp_program_version =
     "License: MIT";
 const char *argp_program_bug_address = "https://github.com/ZhaolunYin/minesweeper-tui/issues";
 
+/// Returns the arguments struct populated with default values.
 struct arguments default_args(void) {
     struct arguments args;
     args.width = 0;
@@ -52,18 +53,25 @@ static struct argp_option options[] = {
     { 0 },
 };
 
+/// Parses a single command-line option and validates option combinations.
 static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     struct arguments *arguments = state->input;
 
     switch (key) {
         case 'w':
             arguments->width = atoi(arg);
+            if (arguments->width < 1)
+                argp_error(state, "--width: Invalid value \'%s\'", arg);
             break;
         case 'h':
             arguments->height = atoi(arg);
+            if (arguments->height < 1)
+                argp_error(state, "--height: Invalid value \'%s\'", arg);
             break;
         case 'm':
             arguments->mines = atoi(arg);
+            if (arguments->mines < 1)
+                argp_error(state, "--mines: Invalid value \'%s\'", arg);
             break;
         case 'd':
             bool valid = false;
@@ -93,7 +101,12 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
             arguments->export_filename = arg;
             break;
         case 's':
-            arguments->seed = atoi(arg);
+            char *end;
+            arguments->seed = strtol(arg, &end, 10);
+            if (end && *end != '\0') {
+                argp_error(state, "--seed: Invalid value \'%s\'", arg);
+                return 1;
+            }
             break;
         case 'H':
             show_highscores();

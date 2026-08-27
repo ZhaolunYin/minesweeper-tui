@@ -4,6 +4,7 @@
 
 #include "grid.h"
 #include "arguments.h"
+#include "config.h"
 
 typedef struct {
     int difficulty;
@@ -15,8 +16,7 @@ typedef struct {
     bool win;
     Square *grid;
 
-    long long score;
-    long long highscore;
+    long long time;
     int clicks;
 
     int cursor_x;
@@ -31,6 +31,7 @@ typedef struct {
     struct arguments* args;
 } Game;
 
+void clamp_custom(Preset *preset, int max_x, int max_y);
 Game *init_game(struct arguments *args);
 void game_loop(Game *game);
 bool end_game(Game *game);

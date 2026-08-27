@@ -1,5 +1,7 @@
 #include "ms/draw.h"
 #include "ms.h"
+#include "ms/board.h"
+#include "ms/log.h"
 
 #include <stddef.h>
 #include <string.h>
@@ -7,6 +9,7 @@
 #define SYMBOLS (const char[9]) { '.', '1', '2', '3', '4', '5', '6', '7', '8' }
 
 #define DIGITS 3
+#define MAX_STATS_DISPLAY_VALUE 999
 
 /// Initialises color pairs
 void init_color_pairs(void) {
@@ -22,7 +25,9 @@ void init_color_pairs(void) {
 void draw_grid(WINDOW *board, Square *grid, int board_width, int board_height, int difficulty, bool show_all) {
     box(board, 0, 0);
     const char *difficulty_text = DIFFICULTIES[DIFFICULTY_LINES - DIFFICULTY_OPS + difficulty - (difficulty % 2)];
+    LOG(LOG_DEBUG, "Drawing top bar of grid");
     if (difficulty % 2 == 1) {
+        LOG(LOG_DEBUG, "No-guess difficulty detected");
         if (strlen("Minesweeper-") + strlen(difficulty_text) + strlen("-No guess") < (size_t) board_width)
             mvwprintw(board, 0, 0, "Minesweeper-%s-No guess", difficulty_text);
         else if (strlen(difficulty_text) + strlen("-No guess") < (size_t) board_width)
@@ -36,8 +41,9 @@ void draw_grid(WINDOW *board, Square *grid, int board_width, int board_height, i
         else if (strlen(difficulty_text) < (size_t) board_width)
             mvwprintw(board, 0, (board_width - strlen(difficulty_text)) / 2, "%s", difficulty_text);
     }
-
+    LOG(LOG_DEBUG, "Drawing grid");
     if (!grid) {
+        LOG(LOG_DEBUG, "Grid not found. Drawing empty unrevealed grid");
         for (int y = 2; y < board_height - 1; y++) {
             for (int x = 1; x < board_width - 1; x += 2) {
                 wattron(board, COLOR_PAIR(3));
@@ -46,45 +52,51 @@ void draw_grid(WINDOW *board, Square *grid, int board_width, int board_height, i
             }
         }
     }
+    else if (show_all){
+        LOG(LOG_DEBUG, "Drawing grid with all mines revealed");
+        int i = 0;
+        for (int y = BOX_WIDTH / 2 + STATS_ROW; y < board_height - BOX_WIDTH / 2; y++) {
+            for (int x = BOX_WIDTH / 2; x < board_width - 1; x += WIDTH_MUL) {
+                if (grid[i].mine) {
+                    wattron(board, COLOR_PAIR(1));
+                    mvwaddch(board, y, x, '*');
+                    wattroff(board, COLOR_PAIR(1));
+                }
+                else {
+                    wattron(board, COLOR_PAIR(2));
+                    mvwaddch(board, y, x, SYMBOLS[grid[i].surrounding]);
+                    wattroff(board, COLOR_PAIR(2));
+                }
+                i++;
+            }
+        }
+    }
     else {
         int i = 0;
-        for (int y = 2; y < board_height - 1; y++) {
-            for (int x = 1; x < board_width - 1; x += 2) {
-                if (show_all) {
-                    if (grid[i].mine) {
+        for (int y = BOX_WIDTH / 2 + STATS_ROW; y < board_height - BOX_WIDTH / 2; y++) {
+            for (int x = BOX_WIDTH / 2; x < board_width - 1; x += WIDTH_MUL) {
+                if (grid[i].uncovered) {
+                    wattron(board, COLOR_PAIR(2));
+                    mvwaddch(board, y, x, SYMBOLS[grid[i].surrounding]);
+                    wattroff(board, COLOR_PAIR(2));
+                }
+                else {
+                    if (grid[i].flag) {
                         wattron(board, COLOR_PAIR(1));
-                        mvwaddch(board, y, x, '*');
+                        mvwaddch(board, y, x, 'F');
                         wattroff(board, COLOR_PAIR(1));
                     }
                     else {
-                        wattron(board, COLOR_PAIR(2));
-                        mvwaddch(board, y, x, SYMBOLS[grid[i].surrounding]);
-                        wattroff(board, COLOR_PAIR(2));
-                    }
-                }
-                else {
-                    if (grid[i].uncovered) {
-                        wattron(board, COLOR_PAIR(2));
-                        mvwaddch(board, y, x, SYMBOLS[grid[i].surrounding]);
-                        wattroff(board, COLOR_PAIR(2));
-                    }
-                    else {
-                        if (grid[i].flag) {
-                            wattron(board, COLOR_PAIR(1));
-                            mvwaddch(board, y, x, 'F');
-                            wattroff(board, COLOR_PAIR(1));
-                        }
-                        else {
-                            wattron(board, COLOR_PAIR(3));
-                            mvwaddch(board, y, x, '#');
-                            wattroff(board, COLOR_PAIR(3));
-                        }
+                        wattron(board, COLOR_PAIR(3));
+                        mvwaddch(board, y, x, '#');
+                        wattroff(board, COLOR_PAIR(3));
                     }
                 }
                 i++;
             }
         }
     }
+    LOG(LOG_DEBUG, "Finished drawing");
 }
 
 /// Reads input and moves cursor. Returns true if enter was pressed or false if not
@@ -161,18 +173,21 @@ Action move_cursor(WINDOW *win, Square *grid, int width, int height, int *cursor
                         }
                     }
                 }
-                break;
             }
-        default:
             break;
+        default:
+            return NONE;
     }
     wmove(win, y_to_board_y(*cursor_y), x_to_board_x(*cursor_x));
     wrefresh(win);
     return MOVE;
 }
 
+/// Draws the mine counter and elapsed-time stats on the board.
 void draw_stats(WINDOW *board, int mine_total, int flags, int time) {
     int maxx = getmaxx(board);
-    mvwprintw(board, 1, 1, "%03d", mine_total - flags);
+    time = time > MAX_STATS_DISPLAY_VALUE ? MAX_STATS_DISPLAY_VALUE : time;
+    int mines = (mine_total - flags) > MAX_STATS_DISPLAY_VALUE ? MAX_STATS_DISPLAY_VALUE : (mine_total - flags);
+    mvwprintw(board, 1, 1, "%03d", mines);
     mvwprintw(board, 1, maxx - DIGITS - 1, "%03d", time);
 }
