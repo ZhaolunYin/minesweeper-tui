@@ -5,7 +5,7 @@
         nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
     };
 
-    outputs = { nixpkgs, ... }:
+    outputs = { nixpkgs, self, ... }:
     let
         forAllSystems = function:
         nixpkgs.lib.genAttrs [
@@ -33,6 +33,11 @@
                 '';
             };
         });
+        homeModules.default = { pkgs, ... }: {
+            home.packages = [
+                self.packages.${pkgs.system}.default
+            ];
+        };
         devShells.x86_64-linux.default = 
             nixpkgs.legacyPackages.x86_64-linux.mkShell {
                 packages = with nixpkgs.legacyPackages.x86_64-linux; [

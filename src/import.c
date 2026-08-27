@@ -62,6 +62,10 @@ Square *import_grid(const char *filename, int *width, int *height, int *mines) {
         return NULL;
     }
     Square *grid = malloc((size_t) *width * *height * sizeof(Square));
+    if (!grid) {
+        LOG(LOG_ERROR, "Failed to allocate memory for grid");
+        return NULL;
+    }
     init_grid(grid, *width, *height, *mines, mine_positions);
     if (selection)
         select_square(&grid, *width, *height, selection_x, selection_y);

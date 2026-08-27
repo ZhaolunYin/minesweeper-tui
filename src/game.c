@@ -50,6 +50,10 @@ void clamp_custom(Preset *preset, int max_x, int max_y) {
 /// Creates and initializes a game, selecting or importing a board from the arguments.
 Game *init_game(struct arguments *args) {
     Game *game = malloc(sizeof(Game));
+    if (!game) {
+        LOG(LOG_ERROR, "Failed to allocate memory for game object");
+        return NULL;
+    }
     getmaxyx(stdscr, game->max_y, game->max_x);
 
     game->grid = NULL;

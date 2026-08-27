@@ -256,7 +256,7 @@ static bool _apply_advanced_logic(Square *grid, int width, int height) {
 bool solve_board(Square *grid, int width, int height, int x, int y) {
     Square *copy = malloc((size_t) width * height * sizeof(Square));
     if (!copy) {
-        LOG(LOG_ERROR, "Failed to make copy of grid");
+        LOG(LOG_ERROR, "Failed to allocate memory for copy of grid");
         return false;
     }
     memcpy(copy, grid, (size_t) width * height * sizeof(Square));

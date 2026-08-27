@@ -129,8 +129,16 @@ void init_grid(Square *grid, int width, int height, int mines, int *mine_positio
 Square *create_grid(int width, int height, int mines, int x, int y, int safe_zone, bool no_guess) {
     LOG(LOG_INFO, "Generating grid");
     Square *grid = (Square *) malloc((size_t) width * height * sizeof(Square));
+    if (!grid) {
+        LOG(LOG_ERROR, "Failed to allocate memory for grid");
+        return NULL;
+    }
     for (int i = 0; i < MAX_RETRIES; i++) {
         int *mine_positions = (int *) malloc((size_t) mines * sizeof(int));
+        if (!mine_positions) {
+            LOG(LOG_ERROR, "Failed to allocate memory for list of mine positions");
+            return NULL;
+        }
         for (int i = 0; i < mines; i++)
             mine_positions[i] = -1;
         for (int i = 0; i < mines; i++) {
@@ -175,8 +183,10 @@ int get_bbbv(Square *grid, int width, int height) {
     int bbbv = 0;
 
     bool *visited = calloc((size_t) width * height, sizeof(bool));
-    if (!visited)
+    if (!visited) {
+        LOG(LOG_ERROR, "Failed to allocate memory for list of visited squares");
         return -1;
+    }
     FOR_EACH_IN_GRID(grid, width, height) {
         Square *square = get_square(grid, width, height, x, y);
         if (!square->mine && !square->surrounding && !visited[y * width + x]) {

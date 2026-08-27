@@ -10,6 +10,10 @@
 /// Builds and returns the highscore file path, creating its directory.
 static char *_highscore_filename(void) {
     char *buf = malloc(BUFSIZ);
+    if (!buf) {
+        LOG(LOG_ERROR, "Failed to initialize filename buffer");
+        return NULL;
+    }
     char *cur = buf;
     char *end = buf + BUFSIZ;
     if (getenv("XDG_DATA_HOME")) {
@@ -28,6 +32,8 @@ static char *_highscore_filename(void) {
 static void _fix_highscore_file(void) {
     LOG(LOG_WARNING, "Highscore file was malformed or non-existant. Generating new file");
     char *file = _highscore_filename();
+    if (!file)
+        return;
 
     FILE *fptr = fopen(file, "w");
     for (int i = 0; i < SCORING_DIFFICULTIES; i++) {
@@ -46,6 +52,8 @@ Scores load_highscore(int difficulty) {
         return (Scores) { 0 };
     }
     char *file = _highscore_filename();
+    if (!file)
+        return (Scores) { 0 };
     FILE *fptr = fopen(file, "r");
     if (!fptr) {
         _fix_highscore_file();
@@ -98,6 +106,8 @@ void write_highscore(Scores *score, int difficulty) {
     }
 
     char *file = _highscore_filename();
+    if (!file)
+        return;
     FILE *fptr = fopen(file, "w");
     if (!fptr) {
         LOG(LOG_ERROR, "Failed to open file");
