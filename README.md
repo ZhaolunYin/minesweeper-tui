@@ -14,6 +14,7 @@ A TUI Minesweeper game written in C.
 - Custom board size
 - Chording
 - Command line flags
+- Stats such as 3BV and Efficiency shown
 - Saving and loading boards from files
 
 ## Installation
