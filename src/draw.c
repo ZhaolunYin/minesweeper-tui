@@ -191,3 +191,13 @@ void draw_stats(WINDOW *board, int mine_total, int flags, int time) {
     mvwprintw(board, 1, 1, "%03d", mines);
     mvwprintw(board, 1, maxx - DIGITS - 1, "%03d", time);
 }
+
+void screen_too_small(void) {
+    clear();
+    const char *text = "Terminal too small";
+    LOG(LOG_ERROR, "%s", text);
+    box(stdscr, 0, 0);
+    mvprintw(getmaxy(stdscr) / 2, (getmaxx(stdscr) - strlen(text)) / 2, "%s", text);
+    refresh();
+    getch();
+}

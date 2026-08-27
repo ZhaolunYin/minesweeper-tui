@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <time.h>
 
 #include "ms.h"
 #include "ms/board.h"
+#include "ms/draw.h"
 #include "ms/grid.h"
 #include "ms/log.h"
 
@@ -101,9 +103,13 @@ Game *init_game(struct arguments *args) {
             case 6:
                 game->no_guess = false;
                 Preset custom = select_custom(game->max_x, game->max_y, (Preset) { 0 });
+                if (custom.width == -1 || custom.height == -1 || custom.mines == -1)
+                    return NULL;
                 clamp_custom(&custom, game->max_x, game->max_y);
                 load_preset(custom, &game->width, &game->height, &game->mines);
                 break;
+            default:
+                return NULL;
         }
     }
     else if (!args->width || !args->height || !args->mines) {
@@ -115,6 +121,8 @@ Game *init_game(struct arguments *args) {
             .mines = args->mines,
         };
         Preset custom = select_custom(game->max_x, game->max_y, values);
+        if (custom.width == -1 || custom.height == -1 || custom.mines == -1)
+            return NULL;
         clamp_custom(&custom, game->max_x, game->max_y);
         load_preset(custom, &game->width, &game->height, &game->mines);
         game->no_guess = false;
@@ -143,7 +151,12 @@ Game *init_game(struct arguments *args) {
     game->time = 0;
     game->clicks = 0;
 
-    game->board = newwin(board_height, board_width, (game->max_y - board_height) / 2, (game->max_x - board_width) / 2);
+    if (game->max_y >= board_height && game->max_x >= board_width)
+        game->board = newwin(board_height, board_width, (game->max_y - board_height) / 2, (game->max_x - board_width) / 2);
+    else {
+        screen_too_small();
+        return NULL;
+    }
     keypad(game->board, true);
     wtimeout(game->board, 250);
     LOG(LOG_INFO, "Game initialised.");
@@ -224,6 +237,10 @@ bool end_game(Game *game) {
         bool first = true;
         do {
             play_again = select_play_again(game->max_x, first && !game->args->import_filename, game);
+            if (play_again == -1) {
+                play_again = false;
+                break;
+            }
             if (play_again == 2) {
                 LOG(LOG_INFO, "Exporting board");
                 char filename[BUFSIZ];

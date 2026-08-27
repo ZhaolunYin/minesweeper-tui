@@ -7,6 +7,9 @@
 #include <time.h>
 
 #include "ms.h"
+#include "ms/board.h"
+#include "ms/config.h"
+#include "ms/draw.h"
 #include "ms/highscore.h"
 
 /// Displays a boxed, navigable menu and returns the selected option index.
@@ -86,7 +89,11 @@ int select_difficulty(int term_width, int term_height, char *difficulty, bool no
         if ((int) strlen(DIFFICULTIES[i]) > width)
             width = strlen(DIFFICULTIES[i]);
     }
-    width += 2;
+    width += BOX_WIDTH;
+    if (width > term_width || (DIFFICULTY_LINES + 2) > term_height) {
+        screen_too_small();
+        return -1;
+    }
     return _select_menu(
             (term_width - width) / 2,
             (term_height - (DIFFICULTY_LINES + 2)) / 2,
@@ -197,7 +204,16 @@ static void _show_stats(Game *game) {
         if ((int) strlen(text[i]) > width)
             width = strlen(text[i]);
     }
-    width += 2;
+    width += BOX_WIDTH;
+    int height = 0;
+    for (int i = 0; text[i]; i++) {
+        height++;
+    }
+    height += BOX_WIDTH;
+    if (width > getmaxx(stdscr) || height > getmaxy(stdscr)) {
+        screen_too_small();
+        return;
+    }
     WINDOW *window = newwin(getmaxy(stdscr), width, 0, 0);
     box(window, 0, 0);
 
@@ -229,9 +245,13 @@ int select_play_again(int term_width, bool show_export, Game *game) {
         if ((int) strlen(lines[i]) > width)
             width = strlen(lines[i]);
     }
-    width += 2;
+    width += BOX_WIDTH;
     int nlines = PLAY_AGAIN_LINES - !show_export;
     int nops = PLAY_AGAIN_OPS - !show_export;
+    if (width > term_width || nlines + 2 > getmaxy(stdscr)) {
+        screen_too_small();
+        return -1;
+    }
     int result = _select_menu(
             (term_width - width) / 2,
             0,
@@ -272,7 +292,15 @@ Preset select_custom(int term_width, int term_height, Preset config) {
         if ((int) strlen(lines[i]) > width)
             width = strlen(lines[i]) + CUSTOM_MAX_DIGITS;
     }
-    width += 2;
+    width += BOX_WIDTH;
+    if (width > term_width || CUSTOM_LINES + 2 > term_height) {
+        screen_too_small();
+        return (Preset) {
+            .width = -1,
+            .height = -1,
+            .mines = -1
+        };
+    }
     WINDOW *window = newwin(CUSTOM_LINES + 2, width, (term_height - (CUSTOM_LINES + 2)) / 2, (term_width - width) / 2);
     keypad(window, true);
     int cv = curs_set(0);
@@ -314,14 +342,18 @@ void select_filename(int term_width, char *filename, size_t len) {
         LOG(LOG_ERROR, "Invalid filename buffer");
         return;
     }
+    for (char *p = filename; p < filename + len; p++) {
+        *p = '\0';
+    }
+    if (FILENAME_LINES + 2 > getmaxx(stdscr)) {
+        screen_too_small();
+        return;
+    }
     WINDOW *window = newwin(FILENAME_LINES + 2, term_width, 0, 0);
     keypad(window, true);
     box(window, 0, 0);
     int ch = 0;
     size_t index = 0;
-    for (char *p = filename; p < filename + len; p++) {
-        *p = '\0';
-    }
     while (ch != KEY_ENTER && ch != '\n' && ch != '\r') {
         wclear(window);
         mvwprintw(window, BOX_WIDTH / 2, BOX_WIDTH / 2, "Select File");
