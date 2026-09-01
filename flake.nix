@@ -19,7 +19,7 @@
         packages = forAllSystems (pkgs: {
             default = pkgs.stdenv.mkDerivation {
                 pname = "minesweeper-tui";
-                version = "0.4.0";
+                version = "1.0.0";
                 src = ./.;
 
                 nativeBuildInputs = [ pkgs.pkg-config ];
