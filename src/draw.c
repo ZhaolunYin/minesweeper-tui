@@ -143,6 +143,7 @@ Action move_cursor(WINDOW *win, Square *grid, int width, int height, int *cursor
         case KEY_ENTER:
         case '\n':
         case '\r':
+        case ' ':
             return CLICK;
         case KEY_MOUSE:
             if (getmouse(&event) == OK && wenclose(win, event.y, event.x)) {

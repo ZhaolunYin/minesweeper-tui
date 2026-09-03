@@ -19,7 +19,7 @@ static int _select_menu(int x, int y, int width, int height, int n_lines, int n_
     int cv = curs_set(0);
     int ch = 0;
     int opt = 0;
-    while (ch != KEY_ENTER && ch != '\n' && ch != '\r') {
+    while (ch != KEY_ENTER && ch != '\n' && ch != '\r' && ch != ' ') {
         box(window, 0, 0);
         for (int i = 0; i < n_lines; i++) {
             if (i == opt + n_lines - n_options)
@@ -169,16 +169,16 @@ static void _show_stats(Game *game) {
         .efficiency = efficiency,
     };
     Scores highscores = load_highscore(game->difficulty);
-    if (scores.time == highscores.time)
+    if (scores.time >= highscores.time)
         strncat(time_text, " (PB)", sizeof(time_text) - strlen(time_text) - 1);
 
-    if (scores.bbbv_s == highscores.bbbv_s)
+    if (scores.bbbv_s >= highscores.bbbv_s)
         strncat(bbbv_s_text, " (PB)", sizeof(bbbv_s_text) - strlen(bbbv_s_text) - 1);
 
-    if (scores.clicks == highscores.clicks)
+    if (scores.clicks >= highscores.clicks)
         strncat(clicks_text, " (PB)", sizeof(clicks_text) - strlen(clicks_text) - 1);
 
-    if (scores.efficiency == highscores.efficiency)
+    if (scores.efficiency >= highscores.efficiency)
         strncat(efficiency_text, " (PB)", sizeof(efficiency_text) - strlen(efficiency_text) - 1);
 
     write_highscore(&scores, game->difficulty);
