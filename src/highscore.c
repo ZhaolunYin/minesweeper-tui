@@ -1,4 +1,5 @@
 #include "ms/highscore.h"
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -131,6 +132,10 @@ void show_highscores(void) {
     char efficiency_col[SCORING_DIFFICULTIES][BUFSIZ];
 
     size_t difficulty_width = strlen("Difficulty");
+    const size_t time_width = 10;
+    const size_t bbvs_width = 8;
+    const size_t clicks_width = 8;
+    const size_t efficiency_width = 12;
 
     for (int i = 0; i < SCORING_DIFFICULTIES; i++) {
         snprintf(difficulty_col[i], BUFSIZ, "%s", DIFFICULTIES[i + DIFFICULTY_LINES - DIFFICULTY_OPS]);
@@ -153,16 +158,67 @@ void show_highscores(void) {
             difficulty_width = strlen(difficulty_col[i]);
     }
 
-    printf("%-*s  %-10s  %-8s  %s", (int) difficulty_width, "Difficulty", "Time", "3BV/s", "Efficiency");
-    printf("\n");
-    for (size_t i = 0; i < difficulty_width + 2 + 10 + 1 + 8 + 1 + strlen("Efficiency"); i++)
-        printf("-");
-    printf("\n");
+    // Top bar
+    printf("┌─");
+    for (size_t i = 0; i < difficulty_width; i++)
+        printf("─");
+    printf("─┬─");
+    for (size_t i = 0; i < time_width; i++)
+        printf("─");
+    printf("─┬─");
+    for (size_t i = 0; i < bbvs_width; i++)
+        printf("─");
+    printf("─┬─");
+    for (size_t i = 0; i < clicks_width; i++)
+        printf("─");
+    printf("─┬─");
+    for (size_t i = 0; i < efficiency_width; i++)
+        printf("─");
+    printf("─┐\n");
+
+    printf("│ %-*s │ %-10s │ %-8s │ %-8s │ %-12s │\n", (int) difficulty_width, "Difficulty", "Time", "3BV/s", "Clicks", "Efficiency");
+
+    // Header bar
+    printf("├─");
+    for (size_t i = 0; i < difficulty_width; i++)
+        printf("─");
+    printf("─┼─");
+    for (size_t i = 0; i < time_width; i++)
+        printf("─");
+    printf("─┼─");
+    for (size_t i = 0; i < bbvs_width; i++)
+        printf("─");
+    printf("─┼─");
+    for (size_t i = 0; i < clicks_width; i++)
+        printf("─");
+    printf("─┼─");
+    for (size_t i = 0; i < efficiency_width; i++)
+        printf("─");
+    printf("─┤\n");
 
     for (int i = 0; i < SCORING_DIFFICULTIES; i++) {
-        printf("%-*s  ", (int) difficulty_width, difficulty_col[i]);
-        printf("%-10s  ", time_col[i]);
-        printf("%-8s  ", bbbv_s_col[i]);
-        printf("%s\n", efficiency_col[i]);
+        printf("│ %-*s ", (int) difficulty_width, difficulty_col[i]);
+        printf("│ %-10s ", time_col[i]);
+        printf("│ %-8s ", bbbv_s_col[i]);
+        printf("│ %-8s ", clicks_col[i]);
+        printf("│ %-12s │\n", efficiency_col[i]);
     }
+
+    // Bottom bar
+    printf("└─");
+    for (size_t i = 0; i < difficulty_width; i++)
+        printf("─");
+    printf("─┴─");
+    for (size_t i = 0; i < time_width; i++)
+        printf("─");
+    printf("─┴─");
+    for (size_t i = 0; i < bbvs_width; i++)
+        printf("─");
+    printf("─┴─");
+    for (size_t i = 0; i < clicks_width; i++)
+        printf("─");
+    printf("─┴─");
+    for (size_t i = 0; i < efficiency_width; i++)
+        printf("─");
+    printf("─┘\n");
 }
