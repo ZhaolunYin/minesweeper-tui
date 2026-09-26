@@ -1,14 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/stat.h>
 #include <time.h>
 
 #include "ms.h"
-#include "ms/board.h"
-#include "ms/draw.h"
-#include "ms/grid.h"
-#include "ms/log.h"
 
 #define SAFE_ZONE 1
 #define MIN_MINES 1

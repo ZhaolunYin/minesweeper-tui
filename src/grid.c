@@ -4,7 +4,6 @@
 #include <stdio.h>
 
 #include "ms.h"
-#include "ms/log.h"
 
 #define MAX_RETRIES (1024*1024)
 

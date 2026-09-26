@@ -1,4 +1,3 @@
-#include "ms/highscore.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,7 +5,6 @@
 #include <sys/stat.h>
 
 #include "ms.h"
-#include "ms/log.h"
 
 /// Builds and returns the highscore file path, creating its directory.
 static char *_highscore_filename(void) {
