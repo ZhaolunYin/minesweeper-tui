@@ -33,7 +33,7 @@ Square *import_grid(const char *filename, int *width, int *height, int *mines) {
         }
         else {
             if (ch == '*') {
-                if (mine_index - 1 < BUFSIZ)
+                if (mine_index < BUFSIZ - 1)
                     mine_positions[mine_index++] = i;
             }
             if (ch == 'X') {

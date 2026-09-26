@@ -63,6 +63,9 @@ Game *init_game(struct arguments *args) {
 
     if (args->import_filename) {
         LOG(LOG_DEBUG, "Importing grid");
+        game->width = 0;
+        game->height = 0;
+        game->mines = 0;
         game->grid = import_grid(args->import_filename, &game->width, &game->height, &game->mines);
         if (!game->grid) {
             LOG(LOG_ERROR, "Failed to import grid");
