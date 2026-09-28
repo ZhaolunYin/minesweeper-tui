@@ -1,4 +1,5 @@
 #include "ms.h"
+#include "ms/log.h"
 
 const Preset BEGINNER = {
     .width = 9,

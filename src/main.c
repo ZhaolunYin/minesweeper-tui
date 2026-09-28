@@ -4,6 +4,7 @@
 #include <argp.h>
 
 #include "ms.h"
+#include "ms/log.h"
 
 int main(int argc, char **argv) {
     LOG(LOG_INFO, "Program started");
