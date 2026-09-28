@@ -6,7 +6,7 @@
 
 A TUI Minesweeper game written in C.
 
-<img src="./assets/gameplay.gif" alt="Gameplay" height="300">
+<img src="./assets/gameplay.gif" alt="Gameplay" height="600">
 
 ## Features
 - Ascii text interface with mouse support
