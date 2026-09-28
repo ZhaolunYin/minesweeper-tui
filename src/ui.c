@@ -1,4 +1,3 @@
-#include "ms/ui.h"
 #include <ctype.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -7,10 +6,6 @@
 #include <time.h>
 
 #include "ms.h"
-#include "ms/board.h"
-#include "ms/config.h"
-#include "ms/draw.h"
-#include "ms/highscore.h"
 
 /// Displays a boxed, navigable menu and returns the selected option index.
 static int _select_menu(int x, int y, int width, int height, int n_lines, int n_options, const char **lines) {

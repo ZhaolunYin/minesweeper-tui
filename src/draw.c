@@ -1,7 +1,4 @@
-#include "ms/draw.h"
 #include "ms.h"
-#include "ms/board.h"
-#include "ms/log.h"
 
 #include <stddef.h>
 #include <string.h>
@@ -22,7 +19,7 @@ void init_color_pairs(void) {
 }
 
 /// Draws grid on board with specified dimensions.
-void draw_grid(WINDOW *board, Square *grid, int board_width, int board_height, int difficulty, bool show_all) {
+void draw_grid(WINDOW *board, Square *grid, int board_width, int board_height, int cursor_x, int cursor_y, int difficulty, bool show_all) {
     box(board, 0, 0);
     const char *difficulty_text = DIFFICULTIES[DIFFICULTY_LINES - DIFFICULTY_OPS + difficulty - (difficulty % 2)];
     LOG(LOG_DEBUG, "Drawing top bar of grid");
@@ -46,9 +43,12 @@ void draw_grid(WINDOW *board, Square *grid, int board_width, int board_height, i
         LOG(LOG_DEBUG, "Grid not found. Drawing empty unrevealed grid");
         for (int y = 2; y < board_height - 1; y++) {
             for (int x = 1; x < board_width - 1; x += 2) {
+                if (board_x_to_x(x) == cursor_x && board_y_to_y(y) == cursor_y)
+                    wattron(board, A_REVERSE);
                 wattron(board, COLOR_PAIR(3));
                 mvwaddch(board, y, x, '#');
                 wattroff(board, COLOR_PAIR(3));
+                wattroff(board, A_REVERSE);
             }
         }
     }
@@ -57,6 +57,8 @@ void draw_grid(WINDOW *board, Square *grid, int board_width, int board_height, i
         int i = 0;
         for (int y = BOX_WIDTH / 2 + STATS_ROW; y < board_height - BOX_WIDTH / 2; y++) {
             for (int x = BOX_WIDTH / 2; x < board_width - 1; x += WIDTH_MUL) {
+                if (board_x_to_x(x) == cursor_x && board_y_to_y(y) == cursor_y)
+                    wattron(board, A_REVERSE);
                 if (grid[i].mine) {
                     wattron(board, COLOR_PAIR(1));
                     mvwaddch(board, y, x, '*');
@@ -67,6 +69,7 @@ void draw_grid(WINDOW *board, Square *grid, int board_width, int board_height, i
                     mvwaddch(board, y, x, SYMBOLS[grid[i].surrounding]);
                     wattroff(board, COLOR_PAIR(2));
                 }
+                wattroff(board, A_REVERSE);
                 i++;
             }
         }
@@ -75,6 +78,8 @@ void draw_grid(WINDOW *board, Square *grid, int board_width, int board_height, i
         int i = 0;
         for (int y = BOX_WIDTH / 2 + STATS_ROW; y < board_height - BOX_WIDTH / 2; y++) {
             for (int x = BOX_WIDTH / 2; x < board_width - 1; x += WIDTH_MUL) {
+                if (board_x_to_x(x) == cursor_x && board_y_to_y(y) == cursor_y)
+                    wattron(board, A_REVERSE);
                 if (grid[i].uncovered) {
                     wattron(board, COLOR_PAIR(2));
                     mvwaddch(board, y, x, SYMBOLS[grid[i].surrounding]);
@@ -92,6 +97,7 @@ void draw_grid(WINDOW *board, Square *grid, int board_width, int board_height, i
                         wattroff(board, COLOR_PAIR(3));
                     }
                 }
+                wattroff(board, A_REVERSE);
                 i++;
             }
         }
@@ -101,7 +107,6 @@ void draw_grid(WINDOW *board, Square *grid, int board_width, int board_height, i
 
 /// Reads input and moves cursor. Returns true if enter was pressed or false if not
 Action move_cursor(WINDOW *win, Square *grid, int width, int height, int *cursor_x, int *cursor_y, int *flag_n, int mine_n) {
-    wmove(win, (*cursor_y) + 2, (*cursor_x) * 2 + 1);
     int ch = wgetch(win);
     MEVENT event;
     switch (ch) {
@@ -179,8 +184,6 @@ Action move_cursor(WINDOW *win, Square *grid, int width, int height, int *cursor
         default:
             return NONE;
     }
-    wmove(win, y_to_board_y(*cursor_y), x_to_board_x(*cursor_x));
-    wrefresh(win);
     return MOVE;
 }
 

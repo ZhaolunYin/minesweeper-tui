@@ -1,14 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/stat.h>
 #include <time.h>
 
 #include "ms.h"
-#include "ms/board.h"
-#include "ms/draw.h"
-#include "ms/grid.h"
-#include "ms/log.h"
 
 #define SAFE_ZONE 1
 #define MIN_MINES 1
@@ -174,12 +169,12 @@ Game *init_game(struct arguments *args) {
 void game_loop(Game *game) {
     clear();
     refresh();
-    draw_grid(game->board, NULL, width_to_board_width(game->width), height_to_board_height(game->height), game->difficulty, false);
     draw_stats(game->board, game->mines, 0, 0);
     wrefresh(game->board);
 
     if (!game->grid) {
         do {
+            draw_grid(game->board, NULL, width_to_board_width(game->width), height_to_board_height(game->height), game->cursor_x, game->cursor_y, game->difficulty, false);
             if (move_cursor(game->board, NULL, game->width, game->height, &game->cursor_x, &game->cursor_y, NULL, game->mines) == CLICK) {
                 game->start_x = game->cursor_x;
                 game->start_y = game->cursor_y;
@@ -205,7 +200,7 @@ void game_loop(Game *game) {
             break;
         }
         do {
-            draw_grid(game->board, game->grid, width_to_board_width(game->width), height_to_board_height(game->height), game->difficulty, false);
+            draw_grid(game->board, game->grid, width_to_board_width(game->width), height_to_board_height(game->height), game->cursor_x, game->cursor_y, game->difficulty, false);
             draw_stats(game->board, game->mines, game->flags, game->time / 1000);
             wrefresh(game->board);
             switch (move_cursor(game->board, game->grid, game->width, game->height, &game->cursor_x, &game->cursor_y, &game->flags, game->mines)) {
@@ -229,7 +224,7 @@ void game_loop(Game *game) {
 /// Draws the finished board, handles export and replay, and returns whether to play again.
 bool end_game(Game *game) {
     LOG(LOG_INFO, "Game ended");
-    draw_grid(game->board, game->grid, width_to_board_width(game->width), height_to_board_height(game->height), game->difficulty, true);
+    draw_grid(game->board, game->grid, width_to_board_width(game->width), height_to_board_height(game->height), game->cursor_x, game->cursor_y, game->difficulty, true);
     wrefresh(game->board);
     int play_again;
     if (game->args->export_filename) {

@@ -4,7 +4,6 @@
 #include <argp.h>
 
 #include "ms.h"
-#include "ms/log.h"
 
 int main(int argc, char **argv) {
     LOG(LOG_INFO, "Program started");
@@ -20,6 +19,7 @@ int main(int argc, char **argv) {
     mousemask(BUTTON1_PRESSED | BUTTON3_PRESSED, NULL);
     cbreak();
     noecho();
+    int cv = curs_set(0);
 
     LOG(LOG_DEBUG, "Seeding random number generator with seed %d", args.seed);
     srand(args.seed);
@@ -37,6 +37,7 @@ int main(int argc, char **argv) {
         free(game);
     }
     end_log();
+    curs_set(cv);
     endwin();
     LOG(LOG_INFO, "Program ended");
 }
