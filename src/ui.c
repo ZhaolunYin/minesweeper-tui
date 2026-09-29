@@ -164,15 +164,19 @@ static void _show_stats(Game *game) {
         .efficiency = efficiency,
     };
     Scores highscores = load_highscore(game->difficulty);
-    if (scores.time >= highscores.time)
+    // Less time is better
+    if (scores.time <= highscores.time)
         strncat(time_text, " (PB)", sizeof(time_text) - strlen(time_text) - 1);
 
+    // More 3BV is better
     if (scores.bbbv_s >= highscores.bbbv_s)
         strncat(bbbv_s_text, " (PB)", sizeof(bbbv_s_text) - strlen(bbbv_s_text) - 1);
 
-    if (scores.clicks >= highscores.clicks)
+    // Less clicks is better
+    if (scores.clicks <= highscores.clicks)
         strncat(clicks_text, " (PB)", sizeof(clicks_text) - strlen(clicks_text) - 1);
 
+    // Higher efficiency is better
     if (scores.efficiency >= highscores.efficiency)
         strncat(efficiency_text, " (PB)", sizeof(efficiency_text) - strlen(efficiency_text) - 1);
 
