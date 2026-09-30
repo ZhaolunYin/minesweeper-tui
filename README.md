@@ -36,7 +36,7 @@ git clone https://github.com/ZhaolunYin/minesweeper-tui.git && cd minesweeper-tu
 
 # build & run
 make
-./minesweeper
+./build/minesweeper-tui
 
 # or
 make run
