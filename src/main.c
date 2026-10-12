@@ -28,9 +28,8 @@ int main(int argc, char **argv) {
         LOG(LOG_INFO, "Started new game");
         Game *game = init_game(&args);
         if (!game) {
-            LOG(LOG_ERROR, "Failed to initialise game object");
-            endwin();
-            return 1;
+            LOG(LOG_ERROR, "Did not initialize game object. Did user press 'q'?");
+            break;
         }
         game_loop(game);
         play_again = end_game(game);

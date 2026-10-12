@@ -8,12 +8,13 @@
 
 typedef struct {
     int difficulty;
-    int no_guess;
+    bool no_guess;
     int width;
     int height;
     int mines;
     int flags;
     bool win;
+    bool quit;
     Square *grid;
 
     long long time;

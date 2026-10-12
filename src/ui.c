@@ -14,7 +14,7 @@ static int _select_menu(int x, int y, int width, int height, int n_lines, int n_
     int cv = curs_set(0);
     int ch = 0;
     int opt = 0;
-    while (ch != KEY_ENTER && ch != '\n' && ch != '\r' && ch != ' ') {
+    while (ch != KEY_ENTER && ch != '\n' && ch != '\r' && ch != ' ' && ch != 'q') {
         box(window, 0, 0);
         for (int i = 0; i < n_lines; i++) {
             if (i == opt + n_lines - n_options)
@@ -36,7 +36,6 @@ static int _select_menu(int x, int y, int width, int height, int n_lines, int n_
                 if (opt < n_options - 1)
                     opt++;
                 break;
-
             case KEY_MOUSE:
                 if (getmouse(&event) == OK && wenclose(window, event.y, event.x)) {
                     int relative_x = event.x - x;
@@ -56,7 +55,7 @@ static int _select_menu(int x, int y, int width, int height, int n_lines, int n_
     delwin(window);
     curs_set(cv);
     refresh();
-    return opt;
+    return ch == 'q' ? -1 : opt;
 }
 
 /// Resolves a difficulty name to a preset index, or opens the menu if none matches.
@@ -303,10 +302,10 @@ Preset select_custom(int term_width, int term_height, Preset config) {
     WINDOW *window = newwin(CUSTOM_LINES + 2, width, (term_height - (CUSTOM_LINES + 2)) / 2, (term_width - width) / 2);
     keypad(window, true);
     int cv = curs_set(0);
+    int ch = 0;
     for (int i = 0; i < CUSTOM_LINES; i++) {
-        int ch = 0;
         box(window, 0, 0);
-        while (ch != KEY_ENTER && ch != '\n' && ch != '\r') {
+        while (ch != KEY_ENTER && ch != '\n' && ch != '\r' && ch != 'q') {
             for (int j = 0; j < CUSTOM_LINES; j++) {
                 if (j == i)
                     wattron(window, A_REVERSE);
@@ -331,7 +330,7 @@ Preset select_custom(int term_width, int term_height, Preset config) {
     delwin(window);
     curs_set(cv);
     refresh();
-    return config;
+    return ch == 'q' ? (Preset) { .width = -1, .height = -1, .mines = -1 } : config;
 }
 
 /// Prompts the user to type a filename for export.

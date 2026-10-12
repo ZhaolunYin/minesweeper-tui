@@ -39,7 +39,6 @@ static void _fix_highscore_file(void) {
         fprintf(fptr, "0,0,0,0\n");
     }
     fclose(fptr);
-
     free(file);
 }
 
@@ -55,6 +54,7 @@ Scores load_highscore(int difficulty) {
         return (Scores) { 0 };
     FILE *fptr = fopen(file, "r");
     if (!fptr) {
+        free(file);
         _fix_highscore_file();
         return (Scores) { 0 };
     }
@@ -62,6 +62,7 @@ Scores load_highscore(int difficulty) {
     for (int i = 0; i < SCORING_DIFFICULTIES; i++) {
         if (fscanf(fptr, "%lld,%lf,%d,%lf", &result[i].time, &result[i].bbbv_s, &result[i].clicks, &result[i].efficiency) != 4) {
             fclose(fptr);
+            free(file);
             _fix_highscore_file();
             return (Scores) { 0 };
         }

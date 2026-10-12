@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -12,7 +13,7 @@ Square *import_grid(const char *filename, int *width, int *height, int *mines) {
         return NULL;
     }
     int x = 0, y = 0;
-    int mine_positions[BUFSIZ];
+    int mine_positions_index[BUFSIZ];
     size_t mine_index = 0;
     int i = 0;
     int ch;
@@ -34,7 +35,7 @@ Square *import_grid(const char *filename, int *width, int *height, int *mines) {
         else {
             if (ch == '*') {
                 if (mine_index < BUFSIZ - 1)
-                    mine_positions[mine_index++] = i;
+                    mine_positions_index[mine_index++] = i;
             }
             if (ch == 'X') {
                 selection = true;
@@ -61,12 +62,18 @@ Square *import_grid(const char *filename, int *width, int *height, int *mines) {
         LOG(LOG_ERROR, "Invalid grid proportions");
         return NULL;
     }
+
     Square *grid = malloc((size_t) *width * *height * sizeof(Square));
+    bool *mine_positions = calloc(*width * *height, sizeof(bool));
+    for (size_t i = 0; i < mine_index; i++) {
+        mine_positions[mine_positions_index[i]] = true;
+    }
+
     if (!grid) {
         LOG(LOG_ERROR, "Failed to allocate memory for grid");
         return NULL;
     }
-    init_grid(grid, *width, *height, *mines, mine_positions);
+    init_grid(grid, *width, *height, mine_positions);
     if (selection)
         select_square(&grid, *width, *height, selection_x, selection_y);
     return grid;

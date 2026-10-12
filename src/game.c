@@ -146,6 +146,7 @@ Game *init_game(struct arguments *args) {
     game->start_y = 0;
     game->flags = 0;
     game->win = false;
+    game->quit = false;
     game->time = 0;
     game->clicks = 0;
 
@@ -193,7 +194,7 @@ void game_loop(Game *game) {
     clock_gettime(CLOCK_MONOTONIC, &start);
 
     int selected = 0;
-    while (selected != -1) {
+    while (selected != -1 && !game->quit) {
         if (all_selected(game->grid, game->width, game->height)) {
             game->win = true;
             LOG(LOG_INFO, "Game won.");
@@ -211,13 +212,16 @@ void game_loop(Game *game) {
                 case FLAG:
                     game->clicks++;
                     break;
+                case QUIT:
+                    game->quit = true;
+                    break;
                 default:
                     break;
             }
             struct timespec now;
             clock_gettime(CLOCK_MONOTONIC, &now);
             game->time = (now.tv_sec - start.tv_sec) * 1000 + (now.tv_nsec - start.tv_nsec) / (1000 * 1000);
-        } while (!selected);
+        } while (!selected && !game->quit);
     }
 }
 
@@ -226,28 +230,30 @@ bool end_game(Game *game) {
     LOG(LOG_INFO, "Game ended");
     draw_grid(game->board, game->grid, width_to_board_width(game->width), height_to_board_height(game->height), game->cursor_x, game->cursor_y, game->difficulty, true);
     wrefresh(game->board);
-    int play_again;
-    if (game->args->export_filename) {
-        export_grid(game->grid, game->width, game->height, game->start_x, game->start_y, game->args->export_filename);
-        play_again = false;
-    }
-    else {
-        bool first = true;
-        do {
-            play_again = select_play_again(game->max_x, first && !game->args->import_filename, game);
-            if (play_again == -1) {
-                play_again = false;
-                break;
-            }
-            if (play_again == 2) {
-                LOG(LOG_INFO, "Exporting board");
-                char filename[BUFSIZ];
-                select_filename(game->max_x, filename, BUFSIZ);
-                export_grid(game->grid, game->width, game->height, game->start_x, game->start_y, filename);
-                LOG(LOG_DEBUG, "Exported board to %s", filename);
-            }
-            first = false;
-        } while (play_again == 2);
+    int play_again = false;
+    if (!game->quit) {
+        if (game->args->export_filename) {
+            export_grid(game->grid, game->width, game->height, game->start_x, game->start_y, game->args->export_filename);
+            play_again = false;
+        }
+        else {
+            bool first = true;
+            do {
+                play_again = select_play_again(game->max_x, first && !game->args->import_filename, game);
+                if (play_again == -1) {
+                    play_again = false;
+                    break;
+                }
+                if (play_again == 2) {
+                    LOG(LOG_INFO, "Exporting board");
+                    char filename[BUFSIZ];
+                    select_filename(game->max_x, filename, BUFSIZ);
+                    export_grid(game->grid, game->width, game->height, game->start_x, game->start_y, filename);
+                    LOG(LOG_DEBUG, "Exported board to %s", filename);
+                }
+                first = false;
+            } while (play_again == 2);
+        }
     }
     delwin(game->board);
     free(game->grid);

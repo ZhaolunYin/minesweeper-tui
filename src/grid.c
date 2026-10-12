@@ -7,17 +7,6 @@
 
 #define MAX_RETRIES (1024*1024)
 
-/// Function to search for item in list. Returns number of occurences
-static int _find(int *list, int len, int item) {
-    int c = 0;
-    for (int i = 0; i < len; i++) {
-        if (list[i] == item) {
-            c++;
-        }
-    }
-    return c;
-}
-
 /// Returns true if two squares are within `dist` cells horizontally and vertically.
 static bool _in_safe_zone(int width, int pos1, int pos2, int dist) {
     int x1 = pos1 % width;
@@ -108,13 +97,13 @@ bool all_selected(Square *grid, int width, int height) {
 }
 
 /// Initialise grid from dimensions and mines
-void init_grid(Square *grid, int width, int height, int mines, int *mine_positions) {
+void init_grid(Square *grid, int width, int height, bool *mine_positions) {
     LOG(LOG_DEBUG, "Initialising grid values");
     for (int i = 0; i < width * height; i++) {
         grid[i].surrounding = 0;
         grid[i].uncovered = false;
         grid[i].flag = false;
-        grid[i].mine = (bool) _find(mine_positions, mines, i);
+        grid[i].mine = mine_positions[i];
     }
     FOR_EACH_IN_GRID(grid, width, height) {
         FOR_EACH_NEIGHBOUR(x, y, width, height) {
@@ -132,27 +121,27 @@ Square *create_grid(int width, int height, int mines, int x, int y, int safe_zon
         LOG(LOG_ERROR, "Failed to allocate memory for grid");
         return NULL;
     }
-    for (int i = 0; i < MAX_RETRIES; i++) {
-        int *mine_positions = (int *) malloc((size_t) mines * sizeof(int));
+    for (int c = 0; c < MAX_RETRIES; c++) {
+        bool *mine_positions = calloc(width * height, sizeof(bool));
         if (!mine_positions) {
             LOG(LOG_ERROR, "Failed to allocate memory for list of mine positions");
             return NULL;
         }
-        for (int i = 0; i < mines; i++)
-            mine_positions[i] = -1;
         for (int i = 0; i < mines; i++) {
+            int m;
             do {
-                mine_positions[i] = rand() % (width * height);
-            } while (_find(mine_positions, mines, mine_positions[i]) > 1 ||
-                    _in_safe_zone(width, y * width + x, mine_positions[i], safe_zone));
+                m = rand() % (width * height);
+            } while (mine_positions[m] ||
+                    _in_safe_zone(width, y * width + x, m, safe_zone));
+            mine_positions[m] = true;
         }
-        init_grid(grid, width, height, mines, mine_positions);
+        init_grid(grid, width, height, mine_positions);
         free(mine_positions);
         if (!no_guess || solve_board(grid, width, height, x, y)) {
             LOG(LOG_INFO, "Valid grid found");
             break;
         }
-        LOG(LOG_DEBUG, "Invalid grid. Attempt %d", i);
+        LOG(LOG_DEBUG, "Invalid grid. Attempt %d", c);
     }
     if (select_square(&grid, width, height, x, y) == -1) {
         LOG(LOG_ERROR, "First square was a mine despite safety zone.");

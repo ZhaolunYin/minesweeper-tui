@@ -150,6 +150,8 @@ Action move_cursor(WINDOW *win, Square *grid, int width, int height, int *cursor
         case '\r':
         case ' ':
             return CLICK;
+        case 'q':
+            return QUIT;
         case KEY_MOUSE:
             if (getmouse(&event) == OK && wenclose(win, event.y, event.x)) {
                 int startx, starty;

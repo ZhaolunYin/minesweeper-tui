@@ -61,8 +61,7 @@ make run
 | Right  | Flag square |
 
 ## Chording
-> Chording is a feature in minesweeper where all unflagged cells around a number can be opened when the correct amount of flags are around it.
-> \- [*Minesweeper Wiki*](https://minesweeper.fandom.com/wiki/Chording)
+Chording is a feature in minesweeper where all unflagged cells around a number can be opened when the correct amount of flags are around it. To chord, select an already uncovered square.
 
 ## Difficulties
 
