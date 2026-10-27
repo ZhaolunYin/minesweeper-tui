@@ -35,7 +35,7 @@
         });
         homeModules.default = { pkgs, ... }: {
             home.packages = [
-                self.packages.${pkgs.system}.default
+                self.packages.${pkgs.stdenv.hostPlatform.system}.default
             ];
         };
         devShells.x86_64-linux.default = 
