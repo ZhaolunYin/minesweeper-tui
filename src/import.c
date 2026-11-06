@@ -89,7 +89,7 @@ void export_grid(Square *grid, int width, int height, int x, int y, char *filena
     }
     for (int gy = 0; gy < height; gy++) {
         for (int gx = 0; gx < width; gx++) {
-            if (get_square(grid, width, height, gx, gy)->mine) {
+            if (GET_MINE(*get_square(grid, width, height, gx, gy))) {
                 fprintf(fptr, "* ");
             }
             else if (gy == y && gx == x) {

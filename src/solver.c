@@ -21,7 +21,7 @@ static Neighbours _get_neighbours(Square *grid, int width, int height, int x, in
 static int _count_flags(Neighbours *n) {
     int c = 0;
     for (int i = 0; i < n->n; i++)
-        c += n->square[i]->flag;
+        c += GET_FLAG(*n->square[i]);
     return c;
 }
 
@@ -29,7 +29,7 @@ static int _count_flags(Neighbours *n) {
 static int _count_covered(Neighbours *n) {
     int c = 0;
     for (int i = 0; i < n->n; i++) {
-        if (!n->square[i]->uncovered && !n->square[i]->flag)
+        if (!GET_UNCOVERED(*n->square[i]) && !GET_FLAG(*n->square[i]))
             c++;
     }
     return c;
@@ -39,7 +39,7 @@ static int _count_covered(Neighbours *n) {
 static int _count_shared_covered(Neighbours *a, Neighbours *b) {
     int c = 0;
     for (int i = 0; i < a->n; i++) {
-        if (!a->square[i]->uncovered && !a->square[i]->flag) {
+        if (!GET_UNCOVERED(*a->square[i]) && !GET_FLAG(*a->square[i])) {
 
             for (int j = 0; j < b->n; j++) {
                 if (a->square[i] == b->square[j])
@@ -54,7 +54,7 @@ static int _count_shared_covered(Neighbours *a, Neighbours *b) {
 static int _count_unshared_covered(Neighbours *a, Neighbours *b) {
     int c = 0;
     for (int i = 0; i < a->n; i++) {
-        if (!a->square[i]->uncovered && !a->square[i]->flag) {
+        if (!GET_UNCOVERED(*a->square[i]) && !GET_FLAG(*a->square[i])) {
 
             bool duplicate = false;
             for (int j = 0; j < b->n; j++) {
@@ -73,7 +73,7 @@ static Neighbours _get_unshared_covered(Neighbours *a, Neighbours *b) {
     Neighbours n;
     n.n = 0;
     for (int i = 0; i < a->n; i++) {
-        if (!a->square[i]->uncovered && !a->square[i]->flag) {
+        if (!GET_UNCOVERED(*a->square[i]) && !GET_FLAG(*a->square[i])) {
 
             bool duplicate = false;
             for (int j = 0; j < b->n; j++) {
@@ -97,12 +97,12 @@ static bool _b1_pattern(Square *grid, int width, int height, int x, int y) {
     Neighbours n = _get_neighbours(grid, width, height, x, y);
     int covered = _count_covered(&n);
     int flagged = _count_flags(&n);
-    int mines_needed = get_square(grid, width, height, x, y)->surrounding - flagged;
+    int mines_needed = GET_SURROUNDING(*get_square(grid, width, height, x, y)) - flagged;
 
     if (covered == mines_needed && mines_needed) {
         for (int i = 0; i < n.n; i++) {
-            if (!n.square[i]->uncovered && !n.square[i]->flag) {
-                n.square[i]->flag = true;
+            if (!GET_UNCOVERED(*n.square[i]) && !GET_FLAG(*n.square[i])) {
+                SET_FLAG(*n.square[i], true);
                 changed = true;
             }
         }
@@ -115,11 +115,11 @@ static bool _b2_pattern(Square *grid, int width, int height, int x, int y) {
     bool changed = false;
     Neighbours n = _get_neighbours(grid, width, height, x, y);
     int flagged = _count_flags(&n);
-    int mines_needed = get_square(grid, width, height, x, y)->surrounding - flagged;
+    int mines_needed = GET_SURROUNDING(*get_square(grid, width, height, x, y)) - flagged;
 
     if (!mines_needed) {
         for (int i = 0; i < n.n; i++) {
-            if (!n.square[i]->uncovered && !n.square[i]->flag) {
+            if (!GET_UNCOVERED(*n.square[i]) && !GET_FLAG(*n.square[i])) {
                 select_square(&grid, width, height, n.x[i], n.y[i]);
                 changed = true;
             }
@@ -134,8 +134,8 @@ static bool _1_1_pattern(Square *grid, int width, int height, int x1, int y1, in
     Neighbours a = _get_neighbours(grid, width, height, x1, y1);
     Neighbours b = _get_neighbours(grid, width, height, x2, y2);
     if (_count_shared_covered(&a, &b) == _count_covered(&a)) {
-        int minediff = (get_square(grid, width, height, x2, y2)->surrounding - _count_flags(&b)) -
-            (get_square(grid, width, height, x1, y1)->surrounding - _count_flags(&a));
+        int minediff = (GET_SURROUNDING(*get_square(grid, width, height, x2, y2)) - _count_flags(&b)) -
+            (GET_SURROUNDING(*get_square(grid, width, height, x1, y1)) - _count_flags(&a));
         if (!minediff) {
             Neighbours to_uncover = _get_unshared_covered(&b, &a);
             for (int i = 0; i < to_uncover.n; i++) {
@@ -145,8 +145,8 @@ static bool _1_1_pattern(Square *grid, int width, int height, int x1, int y1, in
         }
     }
     else if (_count_shared_covered(&a, &b) == _count_covered(&b)) {
-        int minediff = (get_square(grid, width, height, x1, y1)->surrounding - _count_flags(&a)) -
-            (get_square(grid, width, height, x2, y2)->surrounding - _count_flags(&b));
+        int minediff = (GET_SURROUNDING(*get_square(grid, width, height, x1, y1)) - _count_flags(&a)) -
+            (GET_SURROUNDING(*get_square(grid, width, height, x2, y2)) - _count_flags(&b));
         if (!minediff) {
             Neighbours to_uncover = _get_unshared_covered(&a, &b);
             for (int i = 0; i < to_uncover.n; i++) {
@@ -164,8 +164,8 @@ static bool _1_2_pattern(Square *grid, int width, int height, int x1, int y1, in
     Neighbours a = _get_neighbours(grid, width, height, x1, y1);
     Neighbours b = _get_neighbours(grid, width, height, x2, y2);
 
-    if (get_square(grid, width, height, x1, y1)->surrounding - _count_flags(&a) 
-            > get_square(grid, width, height, x2, y2)->surrounding - _count_flags(&b)) {
+    if (GET_SURROUNDING(*get_square(grid, width, height, x1, y1)) - _count_flags(&a) 
+            > GET_SURROUNDING(*get_square(grid, width, height, x2, y2)) - _count_flags(&b)) {
         int temp = x1;
         x1 = x2;
         x2 = temp;
@@ -180,11 +180,11 @@ static bool _1_2_pattern(Square *grid, int width, int height, int x1, int y1, in
     Square *sq1 = get_square(grid, width, height, x1, y1);
     Square *sq2 = get_square(grid, width, height, x2, y2);
 
-    int diff = (sq2->surrounding - _count_flags(&b)) - (sq1->surrounding - _count_flags(&a));
+    int diff = (GET_SURROUNDING(*sq2) - _count_flags(&b)) - (GET_SURROUNDING(*sq1) - _count_flags(&a));
     if (diff == _count_unshared_covered(&b, &a)) {
         Neighbours to_flag = _get_unshared_covered(&b, &a);
         for (int i = 0; i < to_flag.n; i++) {
-            to_flag.square[i]->flag = true;
+            SET_FLAG(*to_flag.square[i], true);
             changed = true;
         }
         Neighbours to_uncover = _get_unshared_covered(&a, &b);
@@ -211,7 +211,7 @@ static bool _apply_basic_logic(Square *grid, int width, int height) {
     bool changed = false;
     FOR_EACH_IN_GRID(grid, width, height) {
         Square *square = get_square(grid, width, height, x, y);
-        if (!square->uncovered || !square->surrounding)
+        if (!GET_UNCOVERED(*square) || !GET_SURROUNDING(*square))
             continue;
 
         if (_b1_pattern(grid, width, height, x, y))
@@ -235,12 +235,12 @@ static bool _apply_advanced_logic(Square *grid, int width, int height) {
     int index = 0;
     FOR_EACH_IN_GRID(grid, width, height) {
         Square *sq1 = get_square(grid, width, height, x, y);
-        if (!sq1->uncovered)
+        if (!GET_UNCOVERED(*sq1))
             continue;
         visited[index++] = sq1;
         FOR_EACH_NEIGHBOUR(x, y, width, height) {
             Square *sq2 = get_square(grid, width, height, rx, ry);
-            if (_square_visited(visited, index, sq2) || !sq2->uncovered)
+            if (_square_visited(visited, index, sq2) || !GET_UNCOVERED(*sq2))
                 continue;
             if (_1_1_pattern(grid, width, height, x, y, rx, ry))
                 changed = true;

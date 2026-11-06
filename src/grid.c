@@ -37,31 +37,31 @@ int select_square(Square **grid, int width, int height, int x, int y) {
         return 0;
     }
 
-    if (square->flag) {
+    if (GET_FLAG(*square)) {
         LOG(LOG_DEBUG, "Square was flagged");
         return 0;
     }
 
-    if (square->mine) {
+    if (GET_MINE(*square)) {
         LOG(LOG_DEBUG, "Square was a mine");
         return -1;
     }
 
     int uncovered = 0;
-    if (square->uncovered) {
+    if (GET_UNCOVERED(*square)) {
         LOG(LOG_DEBUG, "Square was uncovered");
         int flags = 0;
         FOR_EACH_NEIGHBOUR(x, y, width, height) {
-            flags += get_square(*grid, width, height, rx, ry)->flag;
+            flags += GET_FLAG(*get_square(*grid, width, height, rx, ry));
         }
 
-        if (flags != square->surrounding)
+        if (flags != GET_SURROUNDING(*square))
             return 0;
 
         LOG(LOG_DEBUG, "Performing a chord");
 
         FOR_EACH_NEIGHBOUR(x, y, width, height) {
-            if (get_square(*grid, width, height, rx, ry)->uncovered)
+            if (GET_UNCOVERED(*get_square(*grid, width, height, rx, ry)))
                 continue;
             int result = select_square(grid, width, height, rx, ry);
             if (result == -1)
@@ -71,9 +71,9 @@ int select_square(Square **grid, int width, int height, int x, int y) {
         return uncovered;
     }
     uncovered = 1;
-    square->uncovered = true;
+    SET_UNCOVERED(*square, true);
     LOG(LOG_DEBUG, "Uncovered square");
-    if (square->surrounding)
+    if (GET_SURROUNDING(*square))
         return uncovered;
 
     LOG(LOG_DEBUG, "Square had no neighbouring mines. Uncovering neighbouring squares");
@@ -89,7 +89,7 @@ int select_square(Square **grid, int width, int height, int x, int y) {
 /// Returns true if all non-mine squares have been selected.
 bool all_selected(Square *grid, int width, int height) {
     for (int i = 0; i < width * height; i++) {
-        if (!grid[i].uncovered && !grid[i].mine) {
+        if (!GET_UNCOVERED(grid[i]) && !GET_MINE(grid[i])) {
             return false;
         }
     }
@@ -100,15 +100,14 @@ bool all_selected(Square *grid, int width, int height) {
 void init_grid(Square *grid, int width, int height, bool *mine_positions) {
     LOG(LOG_DEBUG, "Initialising grid values");
     for (int i = 0; i < width * height; i++) {
-        grid[i].surrounding = 0;
-        grid[i].uncovered = false;
-        grid[i].flag = false;
-        grid[i].mine = mine_positions[i];
+        grid[i] = 0;
+        SET_MINE(grid[i], mine_positions[i]);
     }
     FOR_EACH_IN_GRID(grid, width, height) {
+        Square *square = get_square(grid, width, height, x, y);
         FOR_EACH_NEIGHBOUR(x, y, width, height) {
-            if (get_square(grid, width, height, rx, ry)->mine)
-                get_square(grid, width, height, x, y)->surrounding++;
+            if (GET_MINE(*get_square(grid, width, height, rx, ry)))
+                SET_SURROUNDING(*square, GET_SURROUNDING(*square) + 1);
         }
     }
 }
@@ -154,9 +153,9 @@ Square *create_grid(int width, int height, int mines, int x, int y, int safe_zon
 /// Flood-fills from (x, y) marking every connected empty, unmined square as visited.
 static void _3bv_flood_fill(Square *grid, int width, int height, int x, int y, bool *visited) {
     Square *square = get_square(grid, width, height, x, y);
-    if (!square->mine && !visited[y * width + x]) {
+    if (!GET_MINE(*square) && !visited[y * width + x]) {
         visited[y * width + x] = true;
-        if (!square->surrounding) {
+        if (!GET_SURROUNDING(*square)) {
             LOG(LOG_INFO, "Found zero while calculating 3BV. Flood filling");
             FOR_EACH_NEIGHBOUR(x, y, width, height) {
                 _3bv_flood_fill(grid, width, height, rx, ry, visited);
@@ -177,14 +176,14 @@ int get_bbbv(Square *grid, int width, int height) {
     }
     FOR_EACH_IN_GRID(grid, width, height) {
         Square *square = get_square(grid, width, height, x, y);
-        if (!square->mine && !square->surrounding && !visited[y * width + x]) {
+        if (!GET_MINE(*square) && !GET_SURROUNDING(*square) && !visited[y * width + x]) {
             bbbv++;
             _3bv_flood_fill(grid, width, height, x, y, visited);
         }
     }
     FOR_EACH_IN_GRID(grid, width, height) {
         Square *square = get_square(grid, width, height, x, y);
-        if (!square->mine && square->surrounding && !visited[y * width + x]) {
+        if (!GET_MINE(*square) && GET_SURROUNDING(*square) && !visited[y * width + x]) {
             bbbv++;
         }
     }

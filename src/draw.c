@@ -59,14 +59,14 @@ void draw_grid(WINDOW *board, Square *grid, int board_width, int board_height, i
             for (int x = BOX_WIDTH / 2; x < board_width - 1; x += WIDTH_MUL) {
                 if (board_x_to_x(x) == cursor_x && board_y_to_y(y) == cursor_y)
                     wattron(board, A_REVERSE);
-                if (grid[i].mine) {
+                if (GET_MINE(grid[i])) {
                     wattron(board, COLOR_PAIR(1));
                     mvwaddch(board, y, x, '*');
                     wattroff(board, COLOR_PAIR(1));
                 }
                 else {
                     wattron(board, COLOR_PAIR(2));
-                    mvwaddch(board, y, x, SYMBOLS[grid[i].surrounding]);
+                    mvwaddch(board, y, x, SYMBOLS[GET_SURROUNDING(grid[i])]);
                     wattroff(board, COLOR_PAIR(2));
                 }
                 wattroff(board, A_REVERSE);
@@ -80,13 +80,13 @@ void draw_grid(WINDOW *board, Square *grid, int board_width, int board_height, i
             for (int x = BOX_WIDTH / 2; x < board_width - 1; x += WIDTH_MUL) {
                 if (board_x_to_x(x) == cursor_x && board_y_to_y(y) == cursor_y)
                     wattron(board, A_REVERSE);
-                if (grid[i].uncovered) {
+                if (GET_UNCOVERED(grid[i])) {
                     wattron(board, COLOR_PAIR(2));
-                    mvwaddch(board, y, x, SYMBOLS[grid[i].surrounding]);
+                    mvwaddch(board, y, x, SYMBOLS[GET_SURROUNDING(grid[i])]);
                     wattroff(board, COLOR_PAIR(2));
                 }
                 else {
-                    if (grid[i].flag) {
+                    if (GET_FLAG(grid[i])) {
                         wattron(board, COLOR_PAIR(1));
                         mvwaddch(board, y, x, 'F');
                         wattroff(board, COLOR_PAIR(1));
@@ -133,11 +133,11 @@ Action move_cursor(WINDOW *win, Square *grid, int width, int height, int *cursor
         case 'f':
             if (grid && flag_n) {
                 Square *square = get_square(grid, width, height, *cursor_x, *cursor_y);
-                if (!square->uncovered) {
-                    if (!square->flag && *flag_n >= mine_n)
+                if (!GET_UNCOVERED(*square)) {
+                    if (!GET_FLAG(*square) && *flag_n >= mine_n)
                         break;
-                    square->flag = !square->flag;
-                    if (square->flag)
+                    SET_FLAG(*square, !GET_FLAG(*square));
+                    if (GET_FLAG(*square))
                         (*flag_n)++;
                     else
                         (*flag_n)--;
@@ -169,11 +169,11 @@ Action move_cursor(WINDOW *win, Square *grid, int width, int height, int *cursor
                 else if (event.bstate & BUTTON3_PRESSED) {
                     if (grid && flag_n) {
                         Square *square = get_square(grid, width, height, *cursor_x, *cursor_y);
-                        if (!square->uncovered) {
-                            if (!square->flag && *flag_n >= mine_n)
+                        if (!GET_UNCOVERED(*square)) {
+                            if (!GET_FLAG(*square) && *flag_n >= mine_n)
                                 break;
-                            square->flag = !square->flag;
-                            if (square->flag)
+                            SET_FLAG(*square, !GET_FLAG(*square));
+                            if (GET_FLAG(*square))
                                 (*flag_n)++;
                             else
                                 (*flag_n)--;

@@ -186,7 +186,7 @@ void game_loop(Game *game) {
     }
     LOG(LOG_INFO, "Grid initialised");
     FOR_EACH_IN_GRID(game->grid, game->width, game->height) {
-        if (get_square(game->grid, game->width, game->height, x, y)->mine)
+        if (GET_MINE(*get_square(game->grid, game->width, game->height, x, y)))
             LOG(LOG_DEBUG, "Mine at (%d, %d)", x, y);
     }
 
